@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"rssagg/internal/auth"
 	"rssagg/internal/database"
-
 )
 
 type authedHandler func(http.ResponseWriter, *http.Request, database.User) 

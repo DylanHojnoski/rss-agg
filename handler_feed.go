@@ -1,8 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"rssagg/internal/database"
 	"time"
@@ -24,12 +26,25 @@ func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Reque
         return
     }
 
+    rssFeed, err := urlToFeed(params.URL)
+    if err != nil {
+        log.Println("Error fetching feed:", err)
+        return
+    }
+
+    image:= sql.NullString{}
+    if rssFeed.Channel.Image.Url!= "" {
+        image.String = rssFeed.Channel.Image.Url
+        image.Valid = true
+    }
+
     feed, err := apiCfg.DB.CreateFeed(r.Context(), database.CreateFeedParams{
         ID: uuid.New(),
         CreatedAt: time.Now().UTC(),
         UpdatedAt: time.Now().UTC(),
         Name: params.Name,
         Url: params.URL,
+        Image: image,
         UserID: user.ID,
     })
     if err != nil {
@@ -49,4 +64,5 @@ func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request)
 
     respondWithJSON(w, 201, databaseFeedsToFeeds(feeds))
 }
+
 
