@@ -55,6 +55,7 @@ func main() {
         MaxAge: 300,
     }))
 
+
     srv := &http.Server{
         Handler: router, 
         Addr:   ":" + portString,
@@ -79,6 +80,8 @@ func main() {
 
     // posts
     v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsForUser))
+    v1Router.Get("/posts/{feedID}", apiCfg.handlerGetFeedPosts)
+    v1Router.Get("/posts/{feedID}/{date}", apiCfg.handlerGetFeedPostsBeforeDate)
 
 
     router.Mount("/v1", v1Router)

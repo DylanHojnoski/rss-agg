@@ -9,12 +9,12 @@ import (
 	"rssagg/internal/database"
 	"time"
 
+	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 )
 
 func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Request, user database.User) {
     type parameters struct {
-        Name string `json:"name"`
         URL string `json:"url"`
     }
 
@@ -42,7 +42,7 @@ func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Reque
         ID: uuid.New(),
         CreatedAt: time.Now().UTC(),
         UpdatedAt: time.Now().UTC(),
-        Name: params.Name,
+        Name: rssFeed.Channel.Title,
         Url: params.URL,
         Image: image,
         UserID: user.ID,
@@ -65,4 +65,45 @@ func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request)
     respondWithJSON(w, 201, databaseFeedsToFeeds(feeds))
 }
 
+func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Request) {
+    feedID, err := uuid.Parse(chi.URLParam(r, "feedID"))
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
+    }
+
+    posts, err := apiCfg.DB.GetPostsForFeed(r.Context(), database.GetPostsForFeedParams{
+        FeedID: feedID,
+        Limit: 10,
+    })
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
+        return
+    }
+
+    respondWithJSON(w, 201, databasePostsToPosts(posts))
+}
+
+func (apiCfg *apiConfig) handlerGetFeedPostsBeforeDate(w http.ResponseWriter, r *http.Request) {
+    feedID, err := uuid.Parse(chi.URLParam(r, "feedID"))
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
+    }
+
+    date, err := time.Parse(time.RFC3339,chi.URLParam(r, "date"))
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
+    }
+
+    posts, err := apiCfg.DB.GetPostsForFeedBeforeDate(r.Context(), database.GetPostsForFeedBeforeDateParams{
+        FeedID: feedID,
+        PublishedAt: date,
+        Limit: 10,
+    })
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
+        return
+    }
+
+    respondWithJSON(w, 201, databasePostsToPosts(posts))
+}
 

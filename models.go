@@ -31,6 +31,7 @@ type Feed struct {
 	UpdatedAt time.Time `json:"updated_at"`
 	Name      string `json:"name"`
 	Url       string `json:"url"`
+    Image     string `json:"image"`
 	UserID    uuid.UUID `json:"user_id"`
 }
 
@@ -41,6 +42,7 @@ func databaseFeedToFeed(dbFeed database.Feed) Feed{
         UpdatedAt: dbFeed.UpdatedAt,
         Name: dbFeed.Name,
         Url: dbFeed.Url,
+        Image: dbFeed.Image.String,
         UserID: dbFeed.UserID,
     }
 }
@@ -86,7 +88,7 @@ type Post struct {
 	Title       string `json:"title"`
 	Description *string `json:"description"`
 	PublishedAt time.Time `json:"published_at"`
-	Url         string `json:"url"`
+    Audio       string `json:"audio"`
 	FeedID      uuid.UUID `json:"feed_id"`
 }
 
@@ -103,7 +105,7 @@ func databasePostToPost(dbPost database.Post) Post {
         Title: dbPost.Title,
         Description: description,
         PublishedAt: dbPost.PublishedAt,
-        Url: dbPost.Url,
+        Audio: dbPost.Audio,
         FeedID: dbPost.FeedID,
     }
 }

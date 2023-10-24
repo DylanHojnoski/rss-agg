@@ -14,9 +14,9 @@ import (
 )
 
 const createPost = `-- name: CreatePost :one
-INSERT INTO posts (id, created_at, updated_at, title, description, published_at, url, audio, feed_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-RETURNING id, created_at, updated_at, title, description, published_at, url, audio, feed_id
+INSERT INTO posts (id, created_at, updated_at, title, description, published_at, audio, feed_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+RETURNING id, created_at, updated_at, title, description, published_at, audio, feed_id
 `
 
 type CreatePostParams struct {
@@ -26,8 +26,7 @@ type CreatePostParams struct {
 	Title       string
 	Description sql.NullString
 	PublishedAt time.Time
-	Url         string
-	Audio       sql.NullString
+	Audio       string
 	FeedID      uuid.UUID
 }
 
@@ -39,7 +38,6 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 		arg.Title,
 		arg.Description,
 		arg.PublishedAt,
-		arg.Url,
 		arg.Audio,
 		arg.FeedID,
 	)
@@ -51,15 +49,103 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 		&i.Title,
 		&i.Description,
 		&i.PublishedAt,
-		&i.Url,
 		&i.Audio,
 		&i.FeedID,
 	)
 	return i, err
 }
 
+const getPostsForFeed = `-- name: GetPostsForFeed :many
+SELECT id, created_at, updated_at, title, description, published_at, audio, feed_id FROM posts 
+WHERE feed_id = $1
+ORDER BY published_at DESC 
+LIMIT $2
+`
+
+type GetPostsForFeedParams struct {
+	FeedID uuid.UUID
+	Limit  int32
+}
+
+func (q *Queries) GetPostsForFeed(ctx context.Context, arg GetPostsForFeedParams) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getPostsForFeed, arg.FeedID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.Description,
+			&i.PublishedAt,
+			&i.Audio,
+			&i.FeedID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPostsForFeedBeforeDate = `-- name: GetPostsForFeedBeforeDate :many
+SELECT id, created_at, updated_at, title, description, published_at, audio, feed_id FROM posts
+WHERE feed_id = $1 AND published_at < $2
+ORDER BY published_at DESC 
+LIMIT $3
+`
+
+type GetPostsForFeedBeforeDateParams struct {
+	FeedID      uuid.UUID
+	PublishedAt time.Time
+	Limit       int32
+}
+
+func (q *Queries) GetPostsForFeedBeforeDate(ctx context.Context, arg GetPostsForFeedBeforeDateParams) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getPostsForFeedBeforeDate, arg.FeedID, arg.PublishedAt, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.Description,
+			&i.PublishedAt,
+			&i.Audio,
+			&i.FeedID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPostsForUser = `-- name: GetPostsForUser :many
-SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.url, posts.audio, posts.feed_id FROM posts 
+SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.feed_id FROM posts 
 JOIN feed_follows ON posts.feed_id = feed_follows.feed_id
 WHERE feed_follows.user_id = $1
 ORDER BY posts.published_at DESC 
@@ -87,7 +173,6 @@ func (q *Queries) GetPostsForUser(ctx context.Context, arg GetPostsForUserParams
 			&i.Title,
 			&i.Description,
 			&i.PublishedAt,
-			&i.Url,
 			&i.Audio,
 			&i.FeedID,
 		); err != nil {

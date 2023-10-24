@@ -37,8 +37,7 @@ type Post struct {
 	Title       string
 	Description sql.NullString
 	PublishedAt time.Time
-	Url         string
-	Audio       sql.NullString
+	Audio       string
 	FeedID      uuid.UUID
 }
 

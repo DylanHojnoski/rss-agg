@@ -5,11 +5,11 @@ import (
 	"database/sql"
 	"log"
 	"rssagg/internal/database"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/google/uuid"
+    "github.com/araddon/dateparse"
 )
 
 func startScraping(db *database.Queries, concurrency int, timeBetweenRequest time.Duration) {
@@ -55,15 +55,10 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
             description.Valid = true
         }
 
-        audio := sql.NullString{}
-        if item.Audio.Url!= "" {
-            audio.String = item.Audio.Url
-            audio.Valid = true
-        }
-
-        pubAt, err := time.Parse(time.RFC1123Z, item.PubDate)
+        //pubAt, err := time.Parse(time.RFC1123Z, item.PubDate)
+        pubAt, err := dateparse.ParseAny(item.PubDate)
         if err != nil {
-            log.Println("couldn't parse date %v with err %v", item.PubDate, err)
+            log.Printf("couldn't parse date %v with err %v", item.PubDate, err)
             continue
         }
 
@@ -74,14 +69,10 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
             Title: item.Title,
             Description: description,
             PublishedAt: pubAt,
-            Url: item.Link,
-            Audio: audio,
+            Audio: item.Audio.Url,
             FeedID: feed.ID,
         })
         if err != nil {
-            if strings.Contains(err.Error(), "duplicate key") {
-                continue
-            }
             log.Println("failed to create post:", err)
         }
     }
