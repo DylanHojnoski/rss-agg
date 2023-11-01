@@ -5,11 +5,12 @@ import (
 	"database/sql"
 	"log"
 	"rssagg/internal/database"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/araddon/dateparse"
 	"github.com/google/uuid"
-    "github.com/araddon/dateparse"
 )
 
 func startScraping(db *database.Queries, concurrency int, timeBetweenRequest time.Duration) {
@@ -73,6 +74,9 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
             FeedID: feed.ID,
         })
         if err != nil {
+            if strings.Contains(err.Error(), "duplicate key") {
+                continue
+            }
             log.Println("failed to create post:", err)
         }
     }

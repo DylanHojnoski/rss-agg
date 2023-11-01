@@ -16,6 +16,7 @@ import (
 
 type apiConfig struct {
     DB *database.Queries
+    JWTSecret string
 }
 
 func main() {
@@ -40,6 +41,7 @@ func main() {
     db := database.New(conn)
     apiCfg := apiConfig{
         DB: db,
+        JWTSecret: "secretString",
     }
 
     go startScraping(db, 10, time.Minute)
@@ -65,12 +67,16 @@ func main() {
     v1Router.Get("/healthz", handlerReadiness)
     v1Router.Get("/err", handlerErr)
 
+    //login
+    v1Router.Post("/login", apiCfg.handlerLogin)
+
     // users 
     v1Router.Post("/users", apiCfg.handlerCreateUser)
     v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
 
     // feeds
     v1Router.Post("/feeds", apiCfg.middlewareAuth(apiCfg.handlerCreateFeed))
+    v1Router.Post("/feeds/add", apiCfg.handlerCreateFeedNoUser)
     v1Router.Get("/feeds", apiCfg.handlerGetFeeds)
 
     // feed follows
