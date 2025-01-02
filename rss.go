@@ -30,6 +30,7 @@ type RSSItem struct {
     Description string `xml:"description"`
     PubDate string `xml:"pubDate"`
     Audio Enclosure `xml:"enclosure"`
+    Duration string `xml:"http://www.itunes.com/dtds/podcast-1.0.dtd duration"`
 }
 
 type Enclosure struct {

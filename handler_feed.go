@@ -32,6 +32,11 @@ func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Reque
         return
     }
 
+    if (rssFeed.Channel.Title == "") {
+        respondWithError(w, 400 , fmt.Sprintf("Invalid RSS URL: %s", params.URL))
+        return
+    }
+
     image:= sql.NullString{}
     if rssFeed.Channel.Image.Url!= "" {
         image.String = rssFeed.Channel.Image.Url

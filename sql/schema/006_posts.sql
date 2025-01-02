@@ -7,6 +7,7 @@ CREATE TABLE posts (
     description TEXT,
     published_at TIMESTAMP NOT NULL,
     audio TEXT NOT NULL UNIQUE,
+    duration TEXT,
     feed_id UUID NOT NULL REFERENCES feeds(id) ON DELETE CASCADE
 );
 

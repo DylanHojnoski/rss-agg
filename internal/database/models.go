@@ -17,7 +17,6 @@ type Feed struct {
 	UpdatedAt     time.Time
 	Name          string
 	Url           string
-	UserID        uuid.UUID
 	LastFetchedAt sql.NullTime
 	Image         sql.NullString
 }
@@ -30,6 +29,12 @@ type FeedFollow struct {
 	FeedID    uuid.UUID
 }
 
+type Listened struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+	FeedID uuid.UUID
+}
+
 type Post struct {
 	ID          uuid.UUID
 	CreatedAt   time.Time
@@ -38,6 +43,7 @@ type Post struct {
 	Description sql.NullString
 	PublishedAt time.Time
 	Audio       string
+	Duration    sql.NullString
 	FeedID      uuid.UUID
 }
 

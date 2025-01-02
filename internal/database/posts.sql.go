@@ -14,9 +14,9 @@ import (
 )
 
 const createPost = `-- name: CreatePost :one
-INSERT INTO posts (id, created_at, updated_at, title, description, published_at, audio, feed_id)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, created_at, updated_at, title, description, published_at, audio, feed_id
+INSERT INTO posts (id, created_at, updated_at, title, description, published_at, audio, duration, feed_id)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+RETURNING id, created_at, updated_at, title, description, published_at, audio, duration, feed_id
 `
 
 type CreatePostParams struct {
@@ -27,6 +27,7 @@ type CreatePostParams struct {
 	Description sql.NullString
 	PublishedAt time.Time
 	Audio       string
+	Duration    sql.NullString
 	FeedID      uuid.UUID
 }
 
@@ -39,6 +40,7 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 		arg.Description,
 		arg.PublishedAt,
 		arg.Audio,
+		arg.Duration,
 		arg.FeedID,
 	)
 	var i Post
@@ -50,13 +52,14 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 		&i.Description,
 		&i.PublishedAt,
 		&i.Audio,
+		&i.Duration,
 		&i.FeedID,
 	)
 	return i, err
 }
 
 const getPostsForFeed = `-- name: GetPostsForFeed :many
-SELECT id, created_at, updated_at, title, description, published_at, audio, feed_id FROM posts 
+SELECT id, created_at, updated_at, title, description, published_at, audio, duration, feed_id FROM posts 
 WHERE feed_id = $1
 ORDER BY published_at DESC 
 LIMIT $2
@@ -84,6 +87,7 @@ func (q *Queries) GetPostsForFeed(ctx context.Context, arg GetPostsForFeedParams
 			&i.Description,
 			&i.PublishedAt,
 			&i.Audio,
+			&i.Duration,
 			&i.FeedID,
 		); err != nil {
 			return nil, err
@@ -100,7 +104,7 @@ func (q *Queries) GetPostsForFeed(ctx context.Context, arg GetPostsForFeedParams
 }
 
 const getPostsForFeedBeforeDate = `-- name: GetPostsForFeedBeforeDate :many
-SELECT id, created_at, updated_at, title, description, published_at, audio, feed_id FROM posts
+SELECT id, created_at, updated_at, title, description, published_at, audio, duration, feed_id FROM posts
 WHERE feed_id = $1 AND published_at < $2
 ORDER BY published_at DESC 
 LIMIT $3
@@ -129,6 +133,7 @@ func (q *Queries) GetPostsForFeedBeforeDate(ctx context.Context, arg GetPostsFor
 			&i.Description,
 			&i.PublishedAt,
 			&i.Audio,
+			&i.Duration,
 			&i.FeedID,
 		); err != nil {
 			return nil, err
@@ -145,7 +150,7 @@ func (q *Queries) GetPostsForFeedBeforeDate(ctx context.Context, arg GetPostsFor
 }
 
 const getPostsForUser = `-- name: GetPostsForUser :many
-SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.feed_id FROM posts 
+SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id FROM posts 
 JOIN feed_follows ON posts.feed_id = feed_follows.feed_id
 WHERE feed_follows.user_id = $1
 ORDER BY posts.published_at DESC 
@@ -174,6 +179,7 @@ func (q *Queries) GetPostsForUser(ctx context.Context, arg GetPostsForUserParams
 			&i.Description,
 			&i.PublishedAt,
 			&i.Audio,
+			&i.Duration,
 			&i.FeedID,
 		); err != nil {
 			return nil, err

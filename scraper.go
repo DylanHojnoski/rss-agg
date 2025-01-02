@@ -3,13 +3,16 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"rssagg/internal/database"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/araddon/dateparse"
 	"github.com/google/uuid"
-    "github.com/araddon/dateparse"
 )
 
 func startScraping(db *database.Queries, concurrency int, timeBetweenRequest time.Duration) {
@@ -62,6 +65,24 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
             continue
         }
 
+        duration := sql.NullString{}
+        if item.Duration != "" {
+            if strings.Contains(item.Duration, ":") {
+                duration.String = item.Duration
+                duration.Valid = true
+            } else {
+                seconds, err := strconv.Atoi(item.Duration)
+                if err == nil {
+                    hours := seconds / 3600
+                    minutes := (seconds % 3600) / 60
+                    remaingingSeconds := seconds % 60
+
+                    duration.String = fmt.Sprintf("%02d:%02d:%02d", hours, minutes, remaingingSeconds)
+                    duration.Valid = true
+                }
+            }
+        }
+
         _, err = db.CreatePost(context.Background(), database.CreatePostParams {
             ID: uuid.New(),
             CreatedAt: time.Now().UTC(),
@@ -70,6 +91,7 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
             Description: description,
             PublishedAt: pubAt,
             Audio: item.Audio.Url,
+            Duration: duration,
             FeedID: feed.ID,
         })
         if err != nil {

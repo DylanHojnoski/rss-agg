@@ -43,7 +43,6 @@ func databaseFeedToFeed(dbFeed database.Feed) Feed{
         Name: dbFeed.Name,
         Url: dbFeed.Url,
         Image: dbFeed.Image.String,
-        UserID: dbFeed.UserID,
     }
 }
 
@@ -89,6 +88,7 @@ type Post struct {
 	Description *string `json:"description"`
 	PublishedAt time.Time `json:"published_at"`
     Audio       string `json:"audio"`
+    Duration    string `json:"duration"`
 	FeedID      uuid.UUID `json:"feed_id"`
 }
 
@@ -106,6 +106,7 @@ func databasePostToPost(dbPost database.Post) Post {
         Description: description,
         PublishedAt: dbPost.PublishedAt,
         Audio: dbPost.Audio,
+        Duration: dbPost.Duration.String,
         FeedID: dbPost.FeedID,
     }
 }
