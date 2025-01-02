@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 )
 
-func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Request, user database.User) {
+func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Request) {
     type parameters struct {
         URL string `json:"url"`
     }
@@ -45,7 +45,6 @@ func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Reque
         Name: rssFeed.Channel.Title,
         Url: params.URL,
         Image: image,
-        UserID: user.ID,
     })
     if err != nil {
         respondWithError(w,400, fmt.Sprintf("Couldn't create feed: %v", err))
