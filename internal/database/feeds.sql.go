@@ -8,6 +8,7 @@ package database
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"time"
 
 	"github.com/google/uuid"
@@ -51,26 +52,36 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 }
 
 const getFeeds = `-- name: GetFeeds :many
-SELECT id, created_at, updated_at, name, url, last_fetched_at, image FROM feeds
+SELECT feeds.id AS feed_id, feeds.name, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+FROM feeds
+LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
+LEFT JOIN category ON feed_categories.category_id = category.id
+GROUP BY feeds.id
 `
 
-func (q *Queries) GetFeeds(ctx context.Context) ([]Feed, error) {
+type GetFeedsRow struct {
+	FeedID     uuid.UUID
+	Name       string
+	Image      sql.NullString
+	Url        string
+	Categories json.RawMessage
+}
+
+func (q *Queries) GetFeeds(ctx context.Context) ([]GetFeedsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getFeeds)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Feed
+	var items []GetFeedsRow
 	for rows.Next() {
-		var i Feed
+		var i GetFeedsRow
 		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
+			&i.FeedID,
 			&i.Name,
-			&i.Url,
-			&i.LastFetchedAt,
 			&i.Image,
+			&i.Url,
+			&i.Categories,
 		); err != nil {
 			return nil, err
 		}
@@ -86,11 +97,13 @@ func (q *Queries) GetFeeds(ctx context.Context) ([]Feed, error) {
 }
 
 const getNextFeedsToFetch = `-- name: GetNextFeedsToFetch :many
+
 SELECT id, created_at, updated_at, name, url, last_fetched_at, image FROM feeds
 ORDER BY last_fetched_at NULLS FIRST
 LIMIT $1
 `
 
+// SELECT * FROM feeds;
 func (q *Queries) GetNextFeedsToFetch(ctx context.Context, limit int32) ([]Feed, error) {
 	rows, err := q.db.QueryContext(ctx, getNextFeedsToFetch, limit)
 	if err != nil {

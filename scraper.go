@@ -51,6 +51,37 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
         return
     }
 
+    for _, category := range rssFeed.Channel.Categories {
+        if category.Text != "" {
+            var dbCategory, err = db.CreateCategory(context.Background(), database.CreateCategoryParams{
+                ID: uuid.New(),
+                CreatedAt: time.Now().UTC(),
+                UpdatedAt: time.Now().UTC(),
+                Title: category.Text,
+            })
+
+            if err != nil && strings.Contains(err.Error(), "category_title_key") {
+                dbCategory, err = db.GetCategoryByName(context.Background(), category.Text);
+                if (err != nil) {
+                    log.Println("Error getting category:", err)
+                    continue;
+                }
+            }            
+
+            _, err = db.CreateFeedCategory(context.Background(), database.CreateFeedCategoryParams{
+                ID: uuid.New(),
+                CreatedAt: time.Now().UTC(),
+                UpdatedAt: time.Now().UTC(),
+                FeedID: feed.ID,
+                CategoryID: dbCategory.ID,
+            })
+
+            if err != nil {
+                log.Println("Error creating feed category", err)
+            }
+        }
+    }
+
     for _, item := range rssFeed.Channel.Item {
         description := sql.NullString{}
         if item.Description != "" {
@@ -83,6 +114,7 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
             }
         }
 
+
         _, err = db.CreatePost(context.Background(), database.CreatePostParams {
             ID: uuid.New(),
             CreatedAt: time.Now().UTC(),
@@ -96,6 +128,9 @@ func scrapeFeed(db *database.Queries, wg *sync.WaitGroup, feed database.Feed) {
         })
         if err != nil {
             log.Println("failed to create post:", err)
+            if strings.Contains(err.Error(), "posts_audio_key") {
+                break;
+            }
         }
     }
     log.Printf("Feed %s collected, %v posts found", feed.Name, len(rssFeed.Channel.Item))

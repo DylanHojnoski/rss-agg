@@ -14,6 +14,7 @@ type RSSFeed struct {
         Description string `xml:"description"`
         Language string `xml:"language"`
         Image Image `xml:"image"`
+        Categories []CategoryTag `xml:"http://www.itunes.com/dtds/podcast-1.0.dtd category"`
         Item []RSSItem `xml:"item"`
     } `xml:"channel"`
 }
@@ -22,6 +23,10 @@ type Image struct {
     Url string `xml:"url"`
     Title string `xml:"title"`
     Link string `xml:"link"`
+}
+
+type CategoryTag struct {
+    Text string `xml:"text,attr"`
 }
 
 type RSSItem struct {

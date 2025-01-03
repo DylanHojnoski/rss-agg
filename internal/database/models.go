@@ -11,6 +11,13 @@ import (
 	"github.com/google/uuid"
 )
 
+type Category struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	Title     string
+}
+
 type Feed struct {
 	ID            uuid.UUID
 	CreatedAt     time.Time
@@ -19,6 +26,14 @@ type Feed struct {
 	Url           string
 	LastFetchedAt sql.NullTime
 	Image         sql.NullString
+}
+
+type FeedCategory struct {
+	ID         uuid.UUID
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+	FeedID     uuid.UUID
+	CategoryID uuid.UUID
 }
 
 type FeedFollow struct {
