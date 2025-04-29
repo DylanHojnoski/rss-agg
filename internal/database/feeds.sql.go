@@ -96,14 +96,60 @@ func (q *Queries) GetFeeds(ctx context.Context) ([]GetFeedsRow, error) {
 	return items, nil
 }
 
-const getNextFeedsToFetch = `-- name: GetNextFeedsToFetch :many
+const getFeedsForCategory = `-- name: GetFeedsForCategory :many
 
+SELECT feeds.id AS feed_id, feeds.name, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+FROM feeds
+LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
+LEFT JOIN category ON feed_categories.category_id = category.id
+WHERE category.id = $1
+GROUP BY feeds.id
+`
+
+type GetFeedsForCategoryRow struct {
+	FeedID     uuid.UUID
+	Name       string
+	Image      sql.NullString
+	Url        string
+	Categories json.RawMessage
+}
+
+// SELECT * FROM feeds;
+func (q *Queries) GetFeedsForCategory(ctx context.Context, id uuid.UUID) ([]GetFeedsForCategoryRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFeedsForCategory, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []GetFeedsForCategoryRow
+	for rows.Next() {
+		var i GetFeedsForCategoryRow
+		if err := rows.Scan(
+			&i.FeedID,
+			&i.Name,
+			&i.Image,
+			&i.Url,
+			&i.Categories,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getNextFeedsToFetch = `-- name: GetNextFeedsToFetch :many
 SELECT id, created_at, updated_at, name, url, last_fetched_at, image FROM feeds
 ORDER BY last_fetched_at NULLS FIRST
 LIMIT $1
 `
 
-// SELECT * FROM feeds;
 func (q *Queries) GetNextFeedsToFetch(ctx context.Context, limit int32) ([]Feed, error) {
 	rows, err := q.db.QueryContext(ctx, getNextFeedsToFetch, limit)
 	if err != nil {

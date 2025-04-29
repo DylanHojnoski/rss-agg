@@ -92,6 +92,46 @@ func databaseFeedRowToFeed(dbFeed database.GetFeedsRow) Feed {
     }
 }
 
+func databaseFeedsForCategoryRowToFeeds(dbFeed []database.GetFeedsForCategoryRow) []Feed{
+    feeds := []Feed{}
+    for _, dbFeed := range dbFeed {
+        feeds = append(feeds, databaseFeedForCategoryRowToFeed(dbFeed))
+    }
+    return feeds
+}
+
+func databaseFeedForCategoryRowToFeed(dbFeed database.GetFeedsForCategoryRow) Feed {
+    var tuples []CategoryTuple
+    err := json.Unmarshal(dbFeed.Categories, &tuples)
+    if err != nil || tuples[0].Title == "" {
+        return Feed {
+            ID: dbFeed.FeedID,
+            Name: dbFeed.Name,
+            Url: dbFeed.Url,
+            Image: dbFeed.Image.String,
+            Categories: []Category{},
+        }
+    }
+
+    var categories []Category
+
+    for _, tuple := range tuples {
+        categories = append(categories, Category{
+            ID: tuple.ID,
+            Title: tuple.Title,
+        })
+
+    }
+
+    return Feed {
+        ID: dbFeed.FeedID,
+        Name: dbFeed.Name,
+        Url: dbFeed.Url,
+        Image: dbFeed.Image.String,
+        Categories: categories,
+    }
+}
+
 func databaseFeedsRowToFeeds(dbFeed []database.GetFeedsRow) []Feed{
     feeds := []Feed{}
     for _, dbFeed := range dbFeed {
@@ -99,7 +139,6 @@ func databaseFeedsRowToFeeds(dbFeed []database.GetFeedsRow) []Feed{
     }
     return feeds
 }
-
 
 
 type FeedFollow struct {
@@ -181,5 +220,13 @@ func databaseCategoryToCategory(dbCategory database.Category) Category {
         UpdatedAt: dbCategory.UpdatedAt,
         Title: dbCategory.Title,
     }
+}
+
+func databaseCategoriesToCategories(dbCategories []database.Category) []Category {
+    categories := []Category{}
+    for _, dbCategory := range dbCategories {
+        categories = append(categories, databaseCategoryToCategory(dbCategory))
+    }
+    return categories
 }
 

@@ -11,6 +11,14 @@ LEFT JOIN category ON feed_categories.category_id = category.id
 GROUP BY feeds.id;
 --SELECT * FROM feeds;
 
+-- name: GetFeedsForCategory :many
+SELECT feeds.id AS feed_id, feeds.name, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+FROM feeds
+LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
+LEFT JOIN category ON feed_categories.category_id = category.id
+WHERE category.id = $1
+GROUP BY feeds.id;
+
 -- name: GetNextFeedsToFetch :many
 SELECT * FROM feeds
 ORDER BY last_fetched_at NULLS FIRST

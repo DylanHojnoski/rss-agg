@@ -69,6 +69,31 @@ func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request)
     respondWithJSON(w, 201, databaseFeedsRowToFeeds(feeds))
 }
 
+func (apiCfg *apiConfig) handlerGetFeedsForCategory(w http.ResponseWriter, r *http.Request) {
+    categoryID, err := uuid.Parse(chi.URLParam(r, "categoryID"))
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get category: %v", err))
+    }
+
+    feeds, err := apiCfg.DB.GetFeedsForCategory(r.Context(), categoryID)
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get feeds: %v", err))
+        return
+    }
+
+    respondWithJSON(w, 201, databaseFeedsForCategoryRowToFeeds(feeds))
+}
+
+func (apiCfg *apiConfig) handlerGetFeedCategories(w http.ResponseWriter, r *http.Request) {
+    categories, err := apiCfg.DB.GetCategories(r.Context())
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get feeds: %v", err))
+        return
+    }
+
+    respondWithJSON(w, 201, databaseCategoriesToCategories(categories))
+}
+
 func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Request) {
     feedID, err := uuid.Parse(chi.URLParam(r, "feedID"))
     if err != nil {

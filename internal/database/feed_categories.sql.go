@@ -7,7 +7,6 @@ package database
 
 import (
 	"context"
-	"database/sql"
 	"time"
 
 	"github.com/google/uuid"
@@ -44,61 +43,4 @@ func (q *Queries) CreateFeedCategory(ctx context.Context, arg CreateFeedCategory
 		&i.CategoryID,
 	)
 	return i, err
-}
-
-const getFeedsForCategory = `-- name: GetFeedsForCategory :many
-SELECT feed_categories.id, feed_categories.created_at, feed_categories.updated_at, feed_id, category_id, feeds.id, feeds.created_at, feeds.updated_at, name, url, last_fetched_at, image FROM feed_categories
-JOIN feeds ON feeds.id = feed_categories.feed_id
-WHERE category_id = $1
-`
-
-type GetFeedsForCategoryRow struct {
-	ID            uuid.UUID
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
-	FeedID        uuid.UUID
-	CategoryID    uuid.UUID
-	ID_2          uuid.UUID
-	CreatedAt_2   time.Time
-	UpdatedAt_2   time.Time
-	Name          string
-	Url           string
-	LastFetchedAt sql.NullTime
-	Image         sql.NullString
-}
-
-func (q *Queries) GetFeedsForCategory(ctx context.Context, categoryID uuid.UUID) ([]GetFeedsForCategoryRow, error) {
-	rows, err := q.db.QueryContext(ctx, getFeedsForCategory, categoryID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []GetFeedsForCategoryRow
-	for rows.Next() {
-		var i GetFeedsForCategoryRow
-		if err := rows.Scan(
-			&i.ID,
-			&i.CreatedAt,
-			&i.UpdatedAt,
-			&i.FeedID,
-			&i.CategoryID,
-			&i.ID_2,
-			&i.CreatedAt_2,
-			&i.UpdatedAt_2,
-			&i.Name,
-			&i.Url,
-			&i.LastFetchedAt,
-			&i.Image,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
 }
