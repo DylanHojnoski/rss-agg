@@ -37,6 +37,12 @@ func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Reque
         return
     }
 
+    description:= sql.NullString{}
+    if rssFeed.Channel.Description != "" {
+        description.String = rssFeed.Channel.Description
+        description.Valid = true
+    }
+
     image:= sql.NullString{}
     if rssFeed.Channel.Image.Url!= "" {
         image.String = rssFeed.Channel.Image.Url
@@ -48,6 +54,7 @@ func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Reque
         CreatedAt: time.Now().UTC(),
         UpdatedAt: time.Now().UTC(),
         Name: rssFeed.Channel.Title,
+        Description: description,
         Url: params.URL,
         Image: image,
     })
@@ -57,6 +64,22 @@ func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Reque
     }
 
     respondWithJSON(w, 201, databaseFeedToFeed(feed))
+}
+
+func (apiCfg *apiConfig) handlerGetFeedForID(w http.ResponseWriter, r *http.Request) {
+    feedID, err := uuid.Parse(chi.URLParam(r, "feedID"))
+    log.Printf("FEEDID: %s\n", feedID);
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get feed: %v", err))
+    }
+
+    feed, err := apiCfg.DB.GetFeedForID(r.Context(), feedID)
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get feeds: %v", err))
+        return
+    }
+
+    respondWithJSON(w, 201, databaseFeedForIDToFeed(feed))
 }
 
 func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request) {

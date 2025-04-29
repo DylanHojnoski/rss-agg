@@ -15,18 +15,19 @@ import (
 )
 
 const createFeed = `-- name: CreateFeed :one
-INSERT INTO feeds (id, created_at, updated_at, name, image, url)
-VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING id, created_at, updated_at, name, url, last_fetched_at, image
+INSERT INTO feeds (id, created_at, updated_at, name, description, image, url)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, created_at, updated_at, name, description, url, last_fetched_at, image
 `
 
 type CreateFeedParams struct {
-	ID        uuid.UUID
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Name      string
-	Image     sql.NullString
-	Url       string
+	ID          uuid.UUID
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
+	Name        string
+	Description sql.NullString
+	Image       sql.NullString
+	Url         string
 }
 
 func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, error) {
@@ -35,6 +36,7 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 		arg.CreatedAt,
 		arg.UpdatedAt,
 		arg.Name,
+		arg.Description,
 		arg.Image,
 		arg.Url,
 	)
@@ -44,6 +46,7 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Name,
+		&i.Description,
 		&i.Url,
 		&i.LastFetchedAt,
 		&i.Image,
@@ -51,8 +54,40 @@ func (q *Queries) CreateFeed(ctx context.Context, arg CreateFeedParams) (Feed, e
 	return i, err
 }
 
+const getFeedForID = `-- name: GetFeedForID :one
+SELECT feeds.id AS id, feeds.name, feeds.description, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+FROM feeds
+LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
+LEFT JOIN category ON feed_categories.category_id = category.id
+WHERE feeds.id = $1
+GROUP BY feeds.id
+`
+
+type GetFeedForIDRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description sql.NullString
+	Image       sql.NullString
+	Url         string
+	Categories  json.RawMessage
+}
+
+func (q *Queries) GetFeedForID(ctx context.Context, id uuid.UUID) (GetFeedForIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getFeedForID, id)
+	var i GetFeedForIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Image,
+		&i.Url,
+		&i.Categories,
+	)
+	return i, err
+}
+
 const getFeeds = `-- name: GetFeeds :many
-SELECT feeds.id AS feed_id, feeds.name, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+SELECT feeds.id AS id, feeds.name, feeds.description, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
 FROM feeds
 LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
 LEFT JOIN category ON feed_categories.category_id = category.id
@@ -60,11 +95,12 @@ GROUP BY feeds.id
 `
 
 type GetFeedsRow struct {
-	FeedID     uuid.UUID
-	Name       string
-	Image      sql.NullString
-	Url        string
-	Categories json.RawMessage
+	ID          uuid.UUID
+	Name        string
+	Description sql.NullString
+	Image       sql.NullString
+	Url         string
+	Categories  json.RawMessage
 }
 
 func (q *Queries) GetFeeds(ctx context.Context) ([]GetFeedsRow, error) {
@@ -77,8 +113,9 @@ func (q *Queries) GetFeeds(ctx context.Context) ([]GetFeedsRow, error) {
 	for rows.Next() {
 		var i GetFeedsRow
 		if err := rows.Scan(
-			&i.FeedID,
+			&i.ID,
 			&i.Name,
+			&i.Description,
 			&i.Image,
 			&i.Url,
 			&i.Categories,
@@ -97,8 +134,7 @@ func (q *Queries) GetFeeds(ctx context.Context) ([]GetFeedsRow, error) {
 }
 
 const getFeedsForCategory = `-- name: GetFeedsForCategory :many
-
-SELECT feeds.id AS feed_id, feeds.name, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+SELECT feeds.id AS id, feeds.name, feeds.description, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
 FROM feeds
 LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
 LEFT JOIN category ON feed_categories.category_id = category.id
@@ -107,14 +143,14 @@ GROUP BY feeds.id
 `
 
 type GetFeedsForCategoryRow struct {
-	FeedID     uuid.UUID
-	Name       string
-	Image      sql.NullString
-	Url        string
-	Categories json.RawMessage
+	ID          uuid.UUID
+	Name        string
+	Description sql.NullString
+	Image       sql.NullString
+	Url         string
+	Categories  json.RawMessage
 }
 
-// SELECT * FROM feeds;
 func (q *Queries) GetFeedsForCategory(ctx context.Context, id uuid.UUID) ([]GetFeedsForCategoryRow, error) {
 	rows, err := q.db.QueryContext(ctx, getFeedsForCategory, id)
 	if err != nil {
@@ -125,8 +161,9 @@ func (q *Queries) GetFeedsForCategory(ctx context.Context, id uuid.UUID) ([]GetF
 	for rows.Next() {
 		var i GetFeedsForCategoryRow
 		if err := rows.Scan(
-			&i.FeedID,
+			&i.ID,
 			&i.Name,
+			&i.Description,
 			&i.Image,
 			&i.Url,
 			&i.Categories,
@@ -145,7 +182,7 @@ func (q *Queries) GetFeedsForCategory(ctx context.Context, id uuid.UUID) ([]GetF
 }
 
 const getNextFeedsToFetch = `-- name: GetNextFeedsToFetch :many
-SELECT id, created_at, updated_at, name, url, last_fetched_at, image FROM feeds
+SELECT id, created_at, updated_at, name, description, url, last_fetched_at, image FROM feeds
 ORDER BY last_fetched_at NULLS FIRST
 LIMIT $1
 `
@@ -164,6 +201,7 @@ func (q *Queries) GetNextFeedsToFetch(ctx context.Context, limit int32) ([]Feed,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.Name,
+			&i.Description,
 			&i.Url,
 			&i.LastFetchedAt,
 			&i.Image,
@@ -186,7 +224,7 @@ UPDATE feeds
 SET last_fetched_at = NOW(),
 updated_at = NOW()
 WHERE id = $1
-RETURNING id, created_at, updated_at, name, url, last_fetched_at, image
+RETURNING id, created_at, updated_at, name, description, url, last_fetched_at, image
 `
 
 func (q *Queries) MarkFeedAsFetched(ctx context.Context, id uuid.UUID) (Feed, error) {
@@ -197,6 +235,7 @@ func (q *Queries) MarkFeedAsFetched(ctx context.Context, id uuid.UUID) (Feed, er
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.Name,
+		&i.Description,
 		&i.Url,
 		&i.LastFetchedAt,
 		&i.Image,

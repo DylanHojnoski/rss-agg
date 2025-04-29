@@ -31,6 +31,7 @@ type Feed struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Name      string `json:"name"`
+    Description string `json:"description"`
 	Url       string `json:"url"`
     Image     string `json:"image"`
     Categories []Category `json:"categories"`
@@ -42,6 +43,7 @@ func databaseFeedToFeed(dbFeed database.Feed) Feed{
         CreatedAt: dbFeed.CreatedAt,
         UpdatedAt: dbFeed.UpdatedAt,
         Name: dbFeed.Name,
+        Description: dbFeed.Description.String,
         Url: dbFeed.Url,
         Image: dbFeed.Image.String,
     }
@@ -60,13 +62,14 @@ type CategoryTuple struct {
     Title string `json:"f2"`
 }
 
-func databaseFeedRowToFeed(dbFeed database.GetFeedsRow) Feed {
+func databaseFeedForIDToFeed(dbFeed database.GetFeedForIDRow) Feed {
     var tuples []CategoryTuple
     err := json.Unmarshal(dbFeed.Categories, &tuples)
     if err != nil || tuples[0].Title == "" {
         return Feed {
-            ID: dbFeed.FeedID,
+            ID: dbFeed.ID,
             Name: dbFeed.Name,
+            Description: dbFeed.Description.String,
             Url: dbFeed.Url,
             Image: dbFeed.Image.String,
             Categories: []Category{},
@@ -84,8 +87,43 @@ func databaseFeedRowToFeed(dbFeed database.GetFeedsRow) Feed {
     }
 
     return Feed {
-        ID: dbFeed.FeedID,
+        ID: dbFeed.ID,
         Name: dbFeed.Name,
+        Description: dbFeed.Description.String,
+        Url: dbFeed.Url,
+        Image: dbFeed.Image.String,
+        Categories: categories,
+    }
+}
+
+func databaseFeedRowToFeed(dbFeed database.GetFeedsRow) Feed {
+    var tuples []CategoryTuple
+    err := json.Unmarshal(dbFeed.Categories, &tuples)
+    if err != nil || tuples[0].Title == "" {
+        return Feed {
+            ID: dbFeed.ID,
+            Name: dbFeed.Name,
+            Description: dbFeed.Description.String,
+            Url: dbFeed.Url,
+            Image: dbFeed.Image.String,
+            Categories: []Category{},
+        }
+    }
+
+    var categories []Category
+
+    for _, tuple := range tuples {
+        categories = append(categories, Category{
+            ID: tuple.ID,
+            Title: tuple.Title,
+        })
+
+    }
+
+    return Feed {
+        ID: dbFeed.ID,
+        Name: dbFeed.Name,
+        Description: dbFeed.Description.String,
         Url: dbFeed.Url,
         Image: dbFeed.Image.String,
         Categories: categories,
@@ -105,8 +143,9 @@ func databaseFeedForCategoryRowToFeed(dbFeed database.GetFeedsForCategoryRow) Fe
     err := json.Unmarshal(dbFeed.Categories, &tuples)
     if err != nil || tuples[0].Title == "" {
         return Feed {
-            ID: dbFeed.FeedID,
+            ID: dbFeed.ID,
             Name: dbFeed.Name,
+            Description: dbFeed.Description.String,
             Url: dbFeed.Url,
             Image: dbFeed.Image.String,
             Categories: []Category{},
@@ -124,8 +163,9 @@ func databaseFeedForCategoryRowToFeed(dbFeed database.GetFeedsForCategoryRow) Fe
     }
 
     return Feed {
-        ID: dbFeed.FeedID,
+        ID: dbFeed.ID,
         Name: dbFeed.Name,
+        Description: dbFeed.Description.String,
         Url: dbFeed.Url,
         Image: dbFeed.Image.String,
         Categories: categories,

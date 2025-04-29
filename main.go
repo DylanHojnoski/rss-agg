@@ -72,6 +72,7 @@ func main() {
     // feeds
     v1Router.Post("/feeds", apiCfg.handlerCreateFeed)
     v1Router.Get("/feeds", apiCfg.handlerGetFeeds)
+    v1Router.Get("/feeds/{feedID}", apiCfg.handlerGetFeedForID)
     v1Router.Get("/feeds/category/{categoryID}", apiCfg.handlerGetFeedsForCategory)
     v1Router.Get("/feeds/category", apiCfg.handlerGetFeedCategories)
 

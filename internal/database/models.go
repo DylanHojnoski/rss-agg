@@ -23,6 +23,7 @@ type Feed struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 	Name          string
+	Description   sql.NullString
 	Url           string
 	LastFetchedAt sql.NullTime
 	Image         sql.NullString

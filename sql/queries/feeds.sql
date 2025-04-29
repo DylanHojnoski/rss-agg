@@ -1,18 +1,25 @@
 -- name: CreateFeed :one
-INSERT INTO feeds (id, created_at, updated_at, name, image, url)
-VALUES ($1, $2, $3, $4, $5, $6)
+INSERT INTO feeds (id, created_at, updated_at, name, description, image, url)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING *;
 
 -- name: GetFeeds :many
-SELECT feeds.id AS feed_id, feeds.name, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+SELECT feeds.id AS id, feeds.name, feeds.description, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
 FROM feeds
 LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
 LEFT JOIN category ON feed_categories.category_id = category.id
 GROUP BY feeds.id;
---SELECT * FROM feeds;
+
+-- name: GetFeedForID :one
+SELECT feeds.id AS id, feeds.name, feeds.description, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+FROM feeds
+LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
+LEFT JOIN category ON feed_categories.category_id = category.id
+WHERE feeds.id = $1
+GROUP BY feeds.id;
 
 -- name: GetFeedsForCategory :many
-SELECT feeds.id AS feed_id, feeds.name, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+SELECT feeds.id AS id, feeds.name, feeds.description, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
 FROM feeds
 LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
 LEFT JOIN category ON feed_categories.category_id = category.id
