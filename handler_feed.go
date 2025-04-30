@@ -3,38 +3,27 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"rssagg/internal/database"
 	"time"
-
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 )
 
-func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Request) {
-    type parameters struct {
-        URL string `json:"url"`
-    }
+func createFeed (url string, apiCfg *apiConfig, w http.ResponseWriter, r *http.Request) (Feed, error) {
 
-    decoder := json.NewDecoder(r.Body)
-    params := parameters{}
-    err := decoder.Decode(&params)
-    if err != nil {
-        respondWithError(w,400, fmt.Sprintf("Error parsing JSON: %v", err))
-        return
-    }
-
-    rssFeed, err := urlToFeed(params.URL)
+    rssFeed, err := urlToFeed(url)
+    var finalFeed Feed
     if err != nil {
         log.Println("Error fetching feed:", err)
-        return
+        return finalFeed, err
     }
 
     if (rssFeed.Channel.Title == "") {
-        respondWithError(w, 400 , fmt.Sprintf("Invalid RSS URL: %s", params.URL))
-        return
+        return finalFeed, errors.New("Invalid RSS URL: " + url)
     }
 
     description:= sql.NullString{}
@@ -55,20 +44,40 @@ func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Reque
         UpdatedAt: time.Now().UTC(),
         Name: rssFeed.Channel.Title,
         Description: description,
-        Url: params.URL,
+        Url: url,
         Image: image,
     })
     if err != nil {
-        respondWithError(w,400, fmt.Sprintf("Couldn't create feed: %v", err))
+        return finalFeed, err
+    }
+
+    return databaseFeedToFeed(feed), err
+}
+
+func (apiCfg *apiConfig) handlerCreateFeed (w http.ResponseWriter, r *http.Request) {
+    type parameters struct {
+        URL string `json:"url"`
+    }
+
+    decoder := json.NewDecoder(r.Body)
+    params := parameters{}
+    err := decoder.Decode(&params)
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Error parsing JSON: %v", err))
         return
     }
 
-    respondWithJSON(w, 201, databaseFeedToFeed(feed))
+    feed, err := createFeed(params.URL, apiCfg, w, r)
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't create feed: %v", err))
+    }
+
+    respondWithJSON(w, 201, feed)
 }
 
 func (apiCfg *apiConfig) handlerGetFeedForID(w http.ResponseWriter, r *http.Request) {
     feedID, err := uuid.Parse(chi.URLParam(r, "feedID"))
-    log.Printf("FEEDID: %s\n", feedID);
+
     if err != nil {
         respondWithError(w,400, fmt.Sprintf("Couldn't get feed: %v", err))
     }

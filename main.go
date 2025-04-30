@@ -75,6 +75,8 @@ func main() {
     v1Router.Get("/feeds/{feedID}", apiCfg.handlerGetFeedForID)
     v1Router.Get("/feeds/category/{categoryID}", apiCfg.handlerGetFeedsForCategory)
     v1Router.Get("/feeds/category", apiCfg.handlerGetFeedCategories)
+    v1Router.Get("/feeds/opml", apiCfg.handlerGetOPML)
+    v1Router.Post("/feeds/opml", apiCfg.handlerImportOPML)
 
     // feed follows
     v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
