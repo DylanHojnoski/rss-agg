@@ -13,7 +13,7 @@ import (
 
 func (apiCfg *apiConfig) handlerCreateFeedFollow (w http.ResponseWriter, r *http.Request, user database.User) {
     type parameters struct {
-        FeedID uuid.UUID `json:"feed_id"`
+        FeedID uuid.UUID `json:"id"`
     }
 
     decoder := json.NewDecoder(r.Body)
@@ -31,6 +31,7 @@ func (apiCfg *apiConfig) handlerCreateFeedFollow (w http.ResponseWriter, r *http
         UserID: user.ID,
         FeedID: params.FeedID,
     })
+
     if err != nil {
         respondWithError(w,400, fmt.Sprintf("Couldn't create feed follow: %v", err))
         return
@@ -58,7 +59,7 @@ func (apiCfg *apiConfig) handlerDeleteFeedFollow(w http.ResponseWriter, r *http.
     }
 
     apiCfg.DB.DeleteFeedFollow(r.Context(), database.DeleteFeedFollowParams{
-        ID: feedFollowID,
+        FeedID: feedFollowID,
         UserID: user.ID,
     })
     if err != nil {

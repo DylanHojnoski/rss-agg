@@ -83,9 +83,9 @@ func main() {
     v1Router.Post("/feeds/opml", apiCfg.handlerImportOPML)
 
     // feed follows
-    // v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
-    // v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollows))
-    // v1Router.Delete("/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
+    v1Router.Post("/feeds/follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
+    v1Router.Get("/feeds/follows", apiCfg.middlewareAuth(apiCfg.handlerGetFollowedFeeds))
+    v1Router.Delete("/feeds/follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
 
     // posts
     // v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsForUser))

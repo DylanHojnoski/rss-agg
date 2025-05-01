@@ -180,6 +180,47 @@ func databaseFeedsRowToFeeds(dbFeed []database.GetFeedsRow) []Feed{
     return feeds
 }
 
+func databaseFollwedFeedRowToFeed(dbFeed database.GetFollowedFeedsRow) Feed {
+    var tuples []CategoryTuple
+    err := json.Unmarshal(dbFeed.Categories, &tuples)
+    if err != nil || tuples[0].Title == "" {
+        return Feed {
+            ID: dbFeed.ID,
+            Name: dbFeed.Name,
+            Description: dbFeed.Description.String,
+            Url: dbFeed.Url,
+            Image: dbFeed.Image.String,
+            Categories: []Category{},
+        }
+    }
+
+    var categories []Category
+
+    for _, tuple := range tuples {
+        categories = append(categories, Category{
+            ID: tuple.ID,
+            Title: tuple.Title,
+        })
+
+    }
+
+    return Feed {
+        ID: dbFeed.ID,
+        Name: dbFeed.Name,
+        Description: dbFeed.Description.String,
+        Url: dbFeed.Url,
+        Image: dbFeed.Image.String,
+        Categories: categories,
+    }
+}
+
+func databaseFollwedFeedsRowToFeeds(dbFeed []database.GetFollowedFeedsRow) []Feed{
+    feeds := []Feed{}
+    for _, dbFeed := range dbFeed {
+        feeds = append(feeds, databaseFollwedFeedRowToFeed(dbFeed))
+    }
+    return feeds
+}
 
 type FeedFollow struct {
     ID        uuid.UUID `json:"id"`

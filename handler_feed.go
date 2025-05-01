@@ -126,6 +126,16 @@ func (apiCfg *apiConfig) handlerGetFeedCategories(w http.ResponseWriter, r *http
     respondWithJSON(w, 201, databaseCategoriesToCategories(categories))
 }
 
+func (apiCfg *apiConfig) handlerGetFollowedFeeds(w http.ResponseWriter, r *http.Request, user database.User) {
+    feeds, err := apiCfg.DB.GetFollowedFeeds(r.Context(), user.ID)
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get feeds: %v", err))
+        return
+    }
+
+    respondWithJSON(w, 201, databaseFollwedFeedsRowToFeeds(feeds))
+}
+
 func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Request) {
     feedID, err := uuid.Parse(chi.URLParam(r, "feedID"))
     if err != nil {
