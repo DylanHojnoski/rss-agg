@@ -26,14 +26,14 @@ func createFeed (url string, apiCfg *apiConfig, w http.ResponseWriter, r *http.R
         return finalFeed, errors.New("Invalid RSS URL: " + url)
     }
 
-    description:= sql.NullString{}
+    description := sql.NullString{}
     if rssFeed.Channel.Description != "" {
         description.String = rssFeed.Channel.Description
         description.Valid = true
     }
 
-    image:= sql.NullString{}
-    if rssFeed.Channel.Image.Url!= "" {
+    image := sql.NullString{}
+    if rssFeed.Channel.Image.Url != "" {
         image.String = rssFeed.Channel.Image.Url
         image.Valid = true
     }
@@ -101,7 +101,7 @@ func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request)
     respondWithJSON(w, 201, databaseFeedsRowToFeeds(feeds))
 }
 
-func (apiCfg *apiConfig) handlerGetFeedsForCategory(w http.ResponseWriter, r *http.Request, user database.User) {
+func (apiCfg *apiConfig) handlerGetFeedsForCategory(w http.ResponseWriter, r *http.Request) {
     categoryID, err := uuid.Parse(chi.URLParam(r, "categoryID"))
     if err != nil {
         respondWithError(w,400, fmt.Sprintf("Couldn't get category: %v", err))

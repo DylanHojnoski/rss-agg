@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/xml"
 	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -38,8 +39,9 @@ func (apiCfg *apiConfig) handlerImportOPML(w http.ResponseWriter, r *http.Reques
     w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
     var newFeeds []Feed
 
-    for _, feed := range opml.Body.Outlines {
+    for _, feed := range opml.Body.OutlineContainer.Outlines {
         newFeed, err := createFeed(feed.Url, apiCfg, w, r)
+        log.Printf("New feed %s\n", feed.Text);
         if err != nil {
 
         } else {

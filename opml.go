@@ -15,13 +15,18 @@ type Head struct {
 }
 
 type Body struct {
-    Outlines []Outline `xml:"outline"`
+    OutlineContainer OutlineContainer `xml:"outline"`
 }
 
 type Outline struct {
     Text string `xml:"text,attr"`
     Url string `xml:"xmlUrl,attr"`
     Type string `xml:"rss,attr"`
+}
+
+type OutlineContainer struct {
+    Text string `xml:"text,attr"`
+    Outlines []Outline `xml:"outline"`
 }
 
 
@@ -42,8 +47,10 @@ func feedsToOPML(feeds []Feed) OPML {
             Title: "Podcast OPML",
         },
         Body: Body {
-            Outlines: outlines,
+            OutlineContainer: OutlineContainer{ 
+                Text: "feeds",
+                Outlines: outlines,
+            },
         },
-
     }
 }

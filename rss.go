@@ -12,6 +12,7 @@ type RSSFeed struct {
         Title string `xml:"title"`
         Link string `xml:"link"`
         Description string `xml:"description"`
+        ItunesSummary string `xml:"http://www.itunes.com/dtds/podcast-1.0.dtd summary"`
         Language string `xml:"language"`
         Image Image `xml:"image"`
         Categories []CategoryTag `xml:"http://www.itunes.com/dtds/podcast-1.0.dtd category"`
@@ -25,6 +26,10 @@ type Image struct {
     Link string `xml:"link"`
 }
 
+type ItunesImage struct {
+    Href string `xml:"href,attr"`
+}
+
 type CategoryTag struct {
     Text string `xml:"text,attr"`
 }
@@ -36,6 +41,7 @@ type RSSItem struct {
     PubDate string `xml:"pubDate"`
     Audio Enclosure `xml:"enclosure"`
     Duration string `xml:"http://www.itunes.com/dtds/podcast-1.0.dtd duration"`
+    ItunesImage ItunesImage `xml:"http://www.itunes.com/dtds/podcast-1.0.dtd image"`
 }
 
 type Enclosure struct {
@@ -67,6 +73,13 @@ func urlToFeed(url string) (RSSFeed, error) {
         return RSSFeed{}, err
     }
 
-    return rssFeed, nil
+    if (rssFeed.Channel.Description == "" && rssFeed.Channel.ItunesSummary != "") {
+        rssFeed.Channel.Description = rssFeed.Channel.ItunesSummary
+    }
 
+    if rssFeed.Channel.Image.Url == "" && len(rssFeed.Channel.Item) > 0 && rssFeed.Channel.Item[0].ItunesImage.Href != "" {
+        rssFeed.Channel.Image.Url = rssFeed.Channel.Item[0].ItunesImage.Href
+    }
+
+    return rssFeed, nil
 }

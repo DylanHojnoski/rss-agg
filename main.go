@@ -69,13 +69,13 @@ func main() {
     v1Router.Post("/users", apiCfg.handlerCreateUser)
     v1Router.Post("/users/login", apiCfg.handlerLogin)
     v1Router.Post("/users/logout", apiCfg.middlewareAuth(apiCfg.handlerLogout))
-    // v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+    v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
 
     // feeds
     v1Router.Post("/feeds", apiCfg.handlerCreateFeed)
     v1Router.Get("/feeds", apiCfg.handlerGetFeeds)
     v1Router.Get("/feeds/{feedID}", apiCfg.handlerGetFeedForID)
-    v1Router.Get("/feeds/category/{categoryID}", apiCfg.middlewareAuth(apiCfg.handlerGetFeedsForCategory))
+    v1Router.Get("/feeds/category/{categoryID}", apiCfg.handlerGetFeedsForCategory)
     v1Router.Get("/feeds/category", apiCfg.handlerGetFeedCategories)
 
     // OPML
