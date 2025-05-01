@@ -101,7 +101,7 @@ func (apiCfg *apiConfig) handlerGetFeeds(w http.ResponseWriter, r *http.Request)
     respondWithJSON(w, 201, databaseFeedsRowToFeeds(feeds))
 }
 
-func (apiCfg *apiConfig) handlerGetFeedsForCategory(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) handlerGetFeedsForCategory(w http.ResponseWriter, r *http.Request, user database.User) {
     categoryID, err := uuid.Parse(chi.URLParam(r, "categoryID"))
     if err != nil {
         respondWithError(w,400, fmt.Sprintf("Couldn't get category: %v", err))

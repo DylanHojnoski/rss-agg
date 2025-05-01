@@ -67,25 +67,28 @@ func main() {
 
     // users 
     v1Router.Post("/users", apiCfg.handlerCreateUser)
-    v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
+    v1Router.Post("/users/login", apiCfg.handlerLogin)
+    v1Router.Post("/users/logout", apiCfg.middlewareAuth(apiCfg.handlerLogout))
+    // v1Router.Get("/users", apiCfg.middlewareAuth(apiCfg.handlerGetUser))
 
     // feeds
     v1Router.Post("/feeds", apiCfg.handlerCreateFeed)
     v1Router.Get("/feeds", apiCfg.handlerGetFeeds)
     v1Router.Get("/feeds/{feedID}", apiCfg.handlerGetFeedForID)
-    v1Router.Get("/feeds/category/{categoryID}", apiCfg.handlerGetFeedsForCategory)
+    v1Router.Get("/feeds/category/{categoryID}", apiCfg.middlewareAuth(apiCfg.handlerGetFeedsForCategory))
     v1Router.Get("/feeds/category", apiCfg.handlerGetFeedCategories)
+
+    // OPML
     v1Router.Get("/feeds/opml", apiCfg.handlerGetOPML)
     v1Router.Post("/feeds/opml", apiCfg.handlerImportOPML)
 
     // feed follows
-    v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
-    v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollows))
-    v1Router.Delete("/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
-
+    // v1Router.Post("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))
+    // v1Router.Get("/feed_follows", apiCfg.middlewareAuth(apiCfg.handlerGetFeedFollows))
+    // v1Router.Delete("/feed_follows/{feedFollowID}", apiCfg.middlewareAuth(apiCfg.handlerDeleteFeedFollow))
 
     // posts
-    v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsForUser))
+    // v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsForUser))
     v1Router.Get("/posts/{feedID}", apiCfg.handlerGetFeedPosts)
     v1Router.Get("/posts/{feedID}/{date}", apiCfg.handlerGetFeedPostsBeforeDate)
 
