@@ -8,7 +8,9 @@ import (
 	"log"
 	"net/http"
 	"rssagg/internal/database"
+	"strconv"
 	"time"
+
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 )
@@ -142,19 +144,38 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
         respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
     }
 
-    posts, err := apiCfg.DB.GetPostsForFeed(r.Context(), database.GetPostsForFeedParams{
-        FeedID: feedID,
-        Limit: 10,
-    })
+    order := r.URL.Query().Get("order")
+    limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
     if err != nil {
-        respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
-        return
+        limit = 10
     }
 
-    respondWithJSON(w, 201, databasePostsToPosts(posts))
+    if order == "asc" {
+        posts, err := apiCfg.DB.GetPostsForFeedAsc(r.Context(), database.GetPostsForFeedAscParams{
+            FeedID: feedID,
+            Limit: int32(limit),
+        })
+        if err != nil {
+            respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
+            return
+        }
+
+        respondWithJSON(w, 200, databasePostsToPosts(posts))
+    } else {
+        posts, err := apiCfg.DB.GetPostsForFeed(r.Context(), database.GetPostsForFeedParams{
+            FeedID: feedID,
+            Limit: int32(limit),
+        })
+        if err != nil {
+            respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
+            return
+        }
+
+        respondWithJSON(w, 200, databasePostsToPosts(posts))
+    }
 }
 
-func (apiCfg *apiConfig) handlerGetFeedPostsBeforeDate(w http.ResponseWriter, r *http.Request) {
+func (apiCfg *apiConfig) handlerGetFeedPostsDate(w http.ResponseWriter, r *http.Request) {
     feedID, err := uuid.Parse(chi.URLParam(r, "feedID"))
     if err != nil {
         respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
@@ -165,16 +186,36 @@ func (apiCfg *apiConfig) handlerGetFeedPostsBeforeDate(w http.ResponseWriter, r 
         respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
     }
 
-    posts, err := apiCfg.DB.GetPostsForFeedBeforeDate(r.Context(), database.GetPostsForFeedBeforeDateParams{
-        FeedID: feedID,
-        PublishedAt: date,
-        Limit: 10,
-    })
+    order := r.URL.Query().Get("order")
+    limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
     if err != nil {
-        respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
-        return
+        limit = 10
     }
 
-    respondWithJSON(w, 201, databasePostsToPosts(posts))
+    if order == "asc" {
+        posts, err := apiCfg.DB.GetPostsForFeedAfterDate(r.Context(), database.GetPostsForFeedAfterDateParams{
+            FeedID: feedID,
+            PublishedAt: date,
+            Limit: int32(limit),
+        })
+        if err != nil {
+            respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
+            return
+        }
+
+        respondWithJSON(w, 201, databasePostsToPosts(posts))
+    } else {
+        posts, err := apiCfg.DB.GetPostsForFeedBeforeDate(r.Context(), database.GetPostsForFeedBeforeDateParams{
+            FeedID: feedID,
+            PublishedAt: date,
+            Limit: int32(limit),
+        })
+        if err != nil {
+            respondWithError(w,400, fmt.Sprintf("Couldn't get posts: %v", err))
+            return
+        }
+
+        respondWithJSON(w, 201, databasePostsToPosts(posts))
+    }
 }
 

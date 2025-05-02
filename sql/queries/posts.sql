@@ -21,3 +21,15 @@ SELECT * FROM posts
 WHERE feed_id = $1 AND published_at < $2
 ORDER BY published_at DESC 
 LIMIT $3;
+
+-- name: GetPostsForFeedAsc :many 
+SELECT * FROM posts 
+WHERE feed_id = $1
+ORDER BY published_at Asc 
+LIMIT $2;
+
+-- name: GetPostsForFeedAfterDate :many 
+SELECT * FROM posts
+WHERE feed_id = $1 AND published_at > $2
+ORDER BY published_at ASC 
+LIMIT $3;

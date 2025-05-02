@@ -90,7 +90,7 @@ func main() {
     // posts
     // v1Router.Get("/posts", apiCfg.middlewareAuth(apiCfg.handlerGetPostsForUser))
     v1Router.Get("/posts/{feedID}", apiCfg.handlerGetFeedPosts)
-    v1Router.Get("/posts/{feedID}/{date}", apiCfg.handlerGetFeedPostsBeforeDate)
+    v1Router.Get("/posts/{feedID}/{date}", apiCfg.handlerGetFeedPostsDate)
 
 
     router.Mount("/v1", v1Router)

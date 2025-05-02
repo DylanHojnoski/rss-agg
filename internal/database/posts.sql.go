@@ -103,6 +103,97 @@ func (q *Queries) GetPostsForFeed(ctx context.Context, arg GetPostsForFeedParams
 	return items, nil
 }
 
+const getPostsForFeedAfterDate = `-- name: GetPostsForFeedAfterDate :many
+SELECT id, created_at, updated_at, title, description, published_at, audio, duration, feed_id FROM posts
+WHERE feed_id = $1 AND published_at > $2
+ORDER BY published_at ASC 
+LIMIT $3
+`
+
+type GetPostsForFeedAfterDateParams struct {
+	FeedID      uuid.UUID
+	PublishedAt time.Time
+	Limit       int32
+}
+
+func (q *Queries) GetPostsForFeedAfterDate(ctx context.Context, arg GetPostsForFeedAfterDateParams) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getPostsForFeedAfterDate, arg.FeedID, arg.PublishedAt, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.Description,
+			&i.PublishedAt,
+			&i.Audio,
+			&i.Duration,
+			&i.FeedID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getPostsForFeedAsc = `-- name: GetPostsForFeedAsc :many
+SELECT id, created_at, updated_at, title, description, published_at, audio, duration, feed_id FROM posts 
+WHERE feed_id = $1
+ORDER BY published_at Asc 
+LIMIT $2
+`
+
+type GetPostsForFeedAscParams struct {
+	FeedID uuid.UUID
+	Limit  int32
+}
+
+func (q *Queries) GetPostsForFeedAsc(ctx context.Context, arg GetPostsForFeedAscParams) ([]Post, error) {
+	rows, err := q.db.QueryContext(ctx, getPostsForFeedAsc, arg.FeedID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Post
+	for rows.Next() {
+		var i Post
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Title,
+			&i.Description,
+			&i.PublishedAt,
+			&i.Audio,
+			&i.Duration,
+			&i.FeedID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getPostsForFeedBeforeDate = `-- name: GetPostsForFeedBeforeDate :many
 SELECT id, created_at, updated_at, title, description, published_at, audio, duration, feed_id FROM posts
 WHERE feed_id = $1 AND published_at < $2
