@@ -12,7 +12,7 @@ END AS viewed
 FROM posts 
 JOIN feed_follows ON posts.feed_id = feed_follows.feed_id
 LEFT JOIN post_views ON posts.id = post_views.post_id
-WHERE feed_follows.user_id = $1
+WHERE feed_follows.user_id = $1 AND post_views.id IS NULL
 ORDER BY posts.published_at DESC 
 LIMIT $2;
 
