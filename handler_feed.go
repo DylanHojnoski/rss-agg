@@ -108,7 +108,16 @@ func (apiCfg *apiConfig) handlerGetFeedsForCategory(w http.ResponseWriter, r *ht
         respondWithError(w,400, fmt.Sprintf("Couldn't get category: %v", err))
     }
 
-    feeds, err := apiCfg.DB.GetFeedsForCategory(r.Context(), categoryID)
+    limit, err := strconv.Atoi(r.URL.Query().Get("limit"))
+    if err != nil {
+        limit = 10
+    }
+
+    feeds, err := apiCfg.DB.GetFeedsForCategory(r.Context(), database.GetFeedsForCategoryParams{
+        ID: categoryID,
+        Limit: int32(limit),
+    })
+
     if err != nil {
         respondWithError(w,400, fmt.Sprintf("Couldn't get feeds: %v", err))
         return

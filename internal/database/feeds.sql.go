@@ -140,7 +140,13 @@ LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
 LEFT JOIN category ON feed_categories.category_id = category.id
 WHERE category.id = $1
 GROUP BY feeds.id
+LIMIT $2
 `
+
+type GetFeedsForCategoryParams struct {
+	ID    uuid.UUID
+	Limit int32
+}
 
 type GetFeedsForCategoryRow struct {
 	ID          uuid.UUID
@@ -151,8 +157,8 @@ type GetFeedsForCategoryRow struct {
 	Categories  json.RawMessage
 }
 
-func (q *Queries) GetFeedsForCategory(ctx context.Context, id uuid.UUID) ([]GetFeedsForCategoryRow, error) {
-	rows, err := q.db.QueryContext(ctx, getFeedsForCategory, id)
+func (q *Queries) GetFeedsForCategory(ctx context.Context, arg GetFeedsForCategoryParams) ([]GetFeedsForCategoryRow, error) {
+	rows, err := q.db.QueryContext(ctx, getFeedsForCategory, arg.ID, arg.Limit)
 	if err != nil {
 		return nil, err
 	}
