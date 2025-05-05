@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"rssagg/internal/auth"
@@ -10,24 +11,6 @@ import (
 )
 
 type authedHandler func(http.ResponseWriter, *http.Request, database.User) 
-
-// func (apiCfg *apiConfig) middlewareAuth(handler authedHandler) http.HandlerFunc {
-//     return func(w http.ResponseWriter, r *http.Request) {
-//         apiKey, err := auth.GetAPIKey((r.Header))
-//         if err != nil {
-//             respondWithError(w, 403, fmt.Sprintf("Auth error: %v", err))
-//             return
-//         }
-//
-//         // user, err := apiCfg.DB.GetUserByAPIKey(r.Context(), apiKey)
-//         // if err != nil {
-//         //     respondWithError(w, 400, fmt.Sprintf("Couldn't get user: %v", err))
-//         //     return
-//         // }
-//
-//         handler(w, r, user)
-//     }
-// }
 
 func (apiCfG *apiConfig) middlewareAuth(handler authedHandler) http.HandlerFunc {
     return func(w http.ResponseWriter, r *http.Request) {
@@ -53,4 +36,19 @@ func (apiCfG *apiConfig) middlewareAuth(handler authedHandler) http.HandlerFunc 
         handler(w, r, user)
     }
 
+}
+
+func getUserID(w http.ResponseWriter, r *http.Request) (uuid.UUID, error) {
+
+    userID, err := auth.VerifyJWT(r)
+    if err != nil {
+        return uuid.UUID{}, errors.New("No user id")
+    }
+
+    id, err := uuid.Parse(userID)
+    if err != nil {
+        return uuid.UUID{}, errors.New("No user id")
+    }
+
+    return id, nil
 }

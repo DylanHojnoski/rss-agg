@@ -92,6 +92,9 @@ func main() {
     v1Router.Get("/posts/{feedID}", apiCfg.handlerGetFeedPosts)
     v1Router.Get("/posts/{feedID}/{date}", apiCfg.handlerGetFeedPostsDate)
 
+    // posts views
+    v1Router.Post("/posts/views",apiCfg.middlewareAuth(apiCfg.handlerCreatePostView))
+
 
     router.Mount("/v1", v1Router)
 

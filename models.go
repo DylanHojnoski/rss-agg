@@ -13,7 +13,6 @@ type User struct {
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Username      string    `json:"name"`
-    // APIKey    string    `json:"api_key"`
 }
 
 func databaseUserToUser(dbUser database.User) User {
@@ -22,7 +21,6 @@ func databaseUserToUser(dbUser database.User) User {
         CreatedAt: dbUser.CreatedAt,
         UpdatedAt: dbUser.UpdatedAt,
         Username: dbUser.Username,
-        // APIKey: dbUser.ApiKey,
     }
 }
 
@@ -257,6 +255,7 @@ type Post struct {
 	PublishedAt time.Time `json:"published_at"`
     Audio       string `json:"audio"`
     Duration    string `json:"duration"`
+    Viewed      bool `json:"viewed"`
 	FeedID      uuid.UUID `json:"feed_id"`
 }
 
@@ -285,6 +284,165 @@ func databasePostsToPosts(dbPosts []database.Post) []Post {
         posts = append(posts, databasePostToPost(dbPost))
     }
     return posts
+}
+
+
+func databasePostForFeedToPost(dbPost database.GetPostsForFeedRow) Post {
+    var description *string
+    if dbPost.Description.Valid {
+        description = &dbPost.Description.String
+    }
+
+    return Post{
+        ID: dbPost.ID,
+        CreatedAt: dbPost.CreatedAt,
+        UpdatedAt: dbPost.UpdatedAt,
+        Title: dbPost.Title,
+        Description: description,
+        PublishedAt: dbPost.PublishedAt,
+        Audio: dbPost.Audio,
+        Duration: dbPost.Duration.String,
+        Viewed: dbPost.Viewed,
+        FeedID: dbPost.FeedID,
+    }
+}
+
+func databasePostsForFeedToPosts(dbPosts []database.GetPostsForFeedRow) []Post {
+    posts := []Post{}
+    for _, dbPost := range dbPosts {
+        posts = append(posts, databasePostForFeedToPost(dbPost))
+    }
+    return posts
+}
+
+func databasePostForFeedAscToPost(dbPost database.GetPostsForFeedAscRow) Post {
+    var description *string
+    if dbPost.Description.Valid {
+        description = &dbPost.Description.String
+    }
+
+    return Post{
+        ID: dbPost.ID,
+        CreatedAt: dbPost.CreatedAt,
+        UpdatedAt: dbPost.UpdatedAt,
+        Title: dbPost.Title,
+        Description: description,
+        PublishedAt: dbPost.PublishedAt,
+        Audio: dbPost.Audio,
+        Duration: dbPost.Duration.String,
+        Viewed: dbPost.Viewed,
+        FeedID: dbPost.FeedID,
+    }
+}
+
+func databasePostsForFeedAscToPosts(dbPosts []database.GetPostsForFeedAscRow) []Post {
+    posts := []Post{}
+    for _, dbPost := range dbPosts {
+        posts = append(posts, databasePostForFeedAscToPost(dbPost))
+    }
+    return posts
+}
+
+func databasePostForFeedAfterDateToPost(dbPost database.GetPostsForFeedAfterDateRow) Post {
+    var description *string
+    if dbPost.Description.Valid {
+        description = &dbPost.Description.String
+    }
+
+    return Post{
+        ID: dbPost.ID,
+        CreatedAt: dbPost.CreatedAt,
+        UpdatedAt: dbPost.UpdatedAt,
+        Title: dbPost.Title,
+        Description: description,
+        PublishedAt: dbPost.PublishedAt,
+        Audio: dbPost.Audio,
+        Duration: dbPost.Duration.String,
+        Viewed: dbPost.Viewed,
+        FeedID: dbPost.FeedID,
+    }
+}
+
+func databasePostsForFeedAfterDateToPosts(dbPosts []database.GetPostsForFeedAfterDateRow) []Post {
+    posts := []Post{}
+    for _, dbPost := range dbPosts {
+        posts = append(posts, databasePostForFeedAfterDateToPost(dbPost))
+    }
+    return posts
+}
+
+func databasePostForFeedBeforeDateToPost(dbPost database.GetPostsForFeedBeforeDateRow) Post {
+    var description *string
+    if dbPost.Description.Valid {
+        description = &dbPost.Description.String
+    }
+
+    return Post{
+        ID: dbPost.ID,
+        CreatedAt: dbPost.CreatedAt,
+        UpdatedAt: dbPost.UpdatedAt,
+        Title: dbPost.Title,
+        Description: description,
+        PublishedAt: dbPost.PublishedAt,
+        Audio: dbPost.Audio,
+        Duration: dbPost.Duration.String,
+        Viewed: dbPost.Viewed,
+        FeedID: dbPost.FeedID,
+    }
+}
+
+func databasePostsForFeedBeforeDateToPosts(dbPosts []database.GetPostsForFeedBeforeDateRow) []Post {
+    posts := []Post{}
+    for _, dbPost := range dbPosts {
+        posts = append(posts, databasePostForFeedBeforeDateToPost(dbPost))
+    }
+    return posts
+}
+
+func databasePostForUserToPost(dbPost database.GetPostsForUserRow) Post {
+    var description *string
+    if dbPost.Description.Valid {
+        description = &dbPost.Description.String
+    }
+
+    return Post{
+        ID: dbPost.ID,
+        CreatedAt: dbPost.CreatedAt,
+        UpdatedAt: dbPost.UpdatedAt,
+        Title: dbPost.Title,
+        Description: description,
+        PublishedAt: dbPost.PublishedAt,
+        Audio: dbPost.Audio,
+        Duration: dbPost.Duration.String,
+        Viewed: dbPost.Viewed,
+        FeedID: dbPost.FeedID,
+    }
+}
+
+func databasePostsForUserToPosts(dbPosts []database.GetPostsForUserRow) []Post {
+    posts := []Post{}
+    for _, dbPost := range dbPosts {
+        posts = append(posts, databasePostForUserToPost(dbPost))
+    }
+    return posts
+}
+
+type PostView struct {
+    ID        uuid.UUID `json:"id"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+	UserID    uuid.UUID `json:"user_id"`
+	PostID    uuid.UUID `json:"post_id"`
+}
+
+func databasePostViewToPostView(dbPostView database.PostView) PostView {
+    return PostView {
+        ID: dbPostView.ID,
+        CreatedAt: dbPostView.CreatedAt,
+        UpdatedAt: dbPostView.UpdatedAt,
+        UserID: dbPostView.UserID,
+        PostID: dbPostView.PostID,
+    }
 }
 
 type Category struct {

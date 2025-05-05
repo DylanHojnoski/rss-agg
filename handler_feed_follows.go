@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"rssagg/internal/database"
 	"time"
-
 	"github.com/go-chi/chi"
 	"github.com/google/uuid"
 )
