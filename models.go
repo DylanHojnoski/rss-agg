@@ -257,6 +257,7 @@ type Post struct {
     Duration    string `json:"duration"`
     Viewed      bool `json:"viewed"`
 	FeedID      uuid.UUID `json:"feed_id"`
+	FeedName    string `json:"feed_name"`
 }
 
 func databasePostToPost(dbPost database.Post) Post {
@@ -304,6 +305,7 @@ func databasePostForFeedToPost(dbPost database.GetPostsForFeedRow) Post {
         Duration: dbPost.Duration.String,
         Viewed: dbPost.Viewed,
         FeedID: dbPost.FeedID,
+        FeedName: dbPost.FeedName,
     }
 }
 
@@ -332,6 +334,7 @@ func databasePostForFeedAscToPost(dbPost database.GetPostsForFeedAscRow) Post {
         Duration: dbPost.Duration.String,
         Viewed: dbPost.Viewed,
         FeedID: dbPost.FeedID,
+        FeedName: dbPost.FeedName,
     }
 }
 
@@ -360,6 +363,7 @@ func databasePostForFeedAfterDateToPost(dbPost database.GetPostsForFeedAfterDate
         Duration: dbPost.Duration.String,
         Viewed: dbPost.Viewed,
         FeedID: dbPost.FeedID,
+        FeedName: dbPost.FeedName,
     }
 }
 
@@ -388,6 +392,7 @@ func databasePostForFeedBeforeDateToPost(dbPost database.GetPostsForFeedBeforeDa
         Duration: dbPost.Duration.String,
         Viewed: dbPost.Viewed,
         FeedID: dbPost.FeedID,
+        FeedName: dbPost.FeedName,
     }
 }
 
@@ -416,6 +421,7 @@ func databasePostForUserToPost(dbPost database.GetPostsForUserRow) Post {
         Duration: dbPost.Duration.String,
         Viewed: dbPost.Viewed,
         FeedID: dbPost.FeedID,
+        FeedName: dbPost.FeedName,
     }
 }
 
@@ -426,6 +432,7 @@ func databasePostsForUserToPosts(dbPosts []database.GetPostsForUserRow) []Post {
     }
     return posts
 }
+
 
 type PostView struct {
     ID        uuid.UUID `json:"id"`

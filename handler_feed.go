@@ -160,6 +160,11 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
         limit = 10
     }
 
+    unviewed, err := strconv.ParseBool(r.URL.Query().Get("unviewed"))
+    if err != nil {
+        unviewed = false;
+    }
+
     if order == "asc" {
         var posts []database.GetPostsForFeedAscRow
         if userErr != nil {
@@ -167,6 +172,7 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
                 FeedID: feedID,
                 Limit: int32(limit),
                 Userid: uuid.Nil,
+                Unviewed: unviewed,
             })
 
         } else {
@@ -174,6 +180,7 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
                 FeedID: feedID,
                 Limit: int32(limit),
                 Userid: userID,
+                Unviewed: unviewed,
             })
         }
 
@@ -190,6 +197,7 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
                 FeedID: feedID,
                 Limit: int32(limit),
                 Userid: uuid.Nil,
+                Unviewed: unviewed,
             })
 
         } else {
@@ -197,6 +205,7 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
                 FeedID: feedID,
                 Limit: int32(limit),
                 Userid: userID,
+                Unviewed: unviewed,
             })
         }
 
@@ -228,6 +237,11 @@ func (apiCfg *apiConfig) handlerGetFeedPostsDate(w http.ResponseWriter, r *http.
         limit = 10
     }
 
+    unviewed, err := strconv.ParseBool(r.URL.Query().Get("unviewed"))
+    if err != nil {
+        unviewed = false;
+    }
+
     if order == "asc" {
         var posts []database.GetPostsForFeedAfterDateRow
         if userErr != nil {
@@ -236,6 +250,7 @@ func (apiCfg *apiConfig) handlerGetFeedPostsDate(w http.ResponseWriter, r *http.
                 PublishedAt: date,
                 Limit: int32(limit),
                 Userid: uuid.Nil,
+                Unviewed: unviewed,
             })
         } else {
             posts, err = apiCfg.DB.GetPostsForFeedAfterDate(r.Context(), database.GetPostsForFeedAfterDateParams{
@@ -243,6 +258,7 @@ func (apiCfg *apiConfig) handlerGetFeedPostsDate(w http.ResponseWriter, r *http.
                 PublishedAt: date,
                 Limit: int32(limit),
                 Userid: userID,
+                Unviewed: unviewed,
             })
         }
 
@@ -260,6 +276,7 @@ func (apiCfg *apiConfig) handlerGetFeedPostsDate(w http.ResponseWriter, r *http.
                 PublishedAt: date,
                 Limit: int32(limit),
                 Userid: uuid.Nil,
+                Unviewed: unviewed,
             })
         } else {
             posts, err = apiCfg.DB.GetPostsForFeedBeforeDate(r.Context(), database.GetPostsForFeedBeforeDateParams{
@@ -267,6 +284,7 @@ func (apiCfg *apiConfig) handlerGetFeedPostsDate(w http.ResponseWriter, r *http.
                 PublishedAt: date,
                 Limit: int32(limit),
                 Userid: userID,
+                Unviewed: unviewed,
             })
         }
 

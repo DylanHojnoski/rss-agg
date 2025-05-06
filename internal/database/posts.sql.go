@@ -59,22 +59,24 @@ func (q *Queries) CreatePost(ctx context.Context, arg CreatePostParams) (Post, e
 }
 
 const getPostsForFeed = `-- name: GetPostsForFeed :many
-SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id,  
+SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id, feeds.name AS feed_name,
 CASE 
     WHEN post_views.id IS NOT NULL THEN TRUE
     ELSE FALSE
 END AS viewed
 FROM posts
+JOIN feeds ON posts.feed_id = feeds.id
 LEFT JOIN post_views ON posts.id = post_views.post_id AND ($3::uuid IS NULL OR $3::uuid = post_views.user_id)
-WHERE feed_id = $1 
+WHERE feed_id = $1 AND ($4::bool = FALSE OR post_views.id IS NULL)
 ORDER BY published_at DESC 
 LIMIT $2
 `
 
 type GetPostsForFeedParams struct {
-	FeedID uuid.UUID
-	Limit  int32
-	Userid uuid.UUID
+	FeedID   uuid.UUID
+	Limit    int32
+	Userid   uuid.UUID
+	Unviewed bool
 }
 
 type GetPostsForFeedRow struct {
@@ -87,11 +89,17 @@ type GetPostsForFeedRow struct {
 	Audio       string
 	Duration    sql.NullString
 	FeedID      uuid.UUID
+	FeedName    string
 	Viewed      bool
 }
 
 func (q *Queries) GetPostsForFeed(ctx context.Context, arg GetPostsForFeedParams) ([]GetPostsForFeedRow, error) {
-	rows, err := q.db.QueryContext(ctx, getPostsForFeed, arg.FeedID, arg.Limit, arg.Userid)
+	rows, err := q.db.QueryContext(ctx, getPostsForFeed,
+		arg.FeedID,
+		arg.Limit,
+		arg.Userid,
+		arg.Unviewed,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -109,6 +117,7 @@ func (q *Queries) GetPostsForFeed(ctx context.Context, arg GetPostsForFeedParams
 			&i.Audio,
 			&i.Duration,
 			&i.FeedID,
+			&i.FeedName,
 			&i.Viewed,
 		); err != nil {
 			return nil, err
@@ -125,14 +134,15 @@ func (q *Queries) GetPostsForFeed(ctx context.Context, arg GetPostsForFeedParams
 }
 
 const getPostsForFeedAfterDate = `-- name: GetPostsForFeedAfterDate :many
-SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id,
+SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id, feeds.name AS feed_name,
 CASE 
     WHEN post_views.id IS NOT NULL THEN TRUE
     ELSE FALSE
 END AS viewed
 FROM posts
+JOIN feeds ON posts.feed_id = feeds.id
 LEFT JOIN post_views ON posts.id = post_views.post_id AND ($4::uuid IS NULL OR $4::uuid = post_views.user_id)
-WHERE feed_id = $1 AND published_at > $2
+WHERE feed_id = $1 AND published_at > $2 AND ($5::bool = FALSE OR post_views.id IS NULL)
 ORDER BY published_at ASC 
 LIMIT $3
 `
@@ -142,6 +152,7 @@ type GetPostsForFeedAfterDateParams struct {
 	PublishedAt time.Time
 	Limit       int32
 	Userid      uuid.UUID
+	Unviewed    bool
 }
 
 type GetPostsForFeedAfterDateRow struct {
@@ -154,6 +165,7 @@ type GetPostsForFeedAfterDateRow struct {
 	Audio       string
 	Duration    sql.NullString
 	FeedID      uuid.UUID
+	FeedName    string
 	Viewed      bool
 }
 
@@ -163,6 +175,7 @@ func (q *Queries) GetPostsForFeedAfterDate(ctx context.Context, arg GetPostsForF
 		arg.PublishedAt,
 		arg.Limit,
 		arg.Userid,
+		arg.Unviewed,
 	)
 	if err != nil {
 		return nil, err
@@ -181,6 +194,7 @@ func (q *Queries) GetPostsForFeedAfterDate(ctx context.Context, arg GetPostsForF
 			&i.Audio,
 			&i.Duration,
 			&i.FeedID,
+			&i.FeedName,
 			&i.Viewed,
 		); err != nil {
 			return nil, err
@@ -197,22 +211,24 @@ func (q *Queries) GetPostsForFeedAfterDate(ctx context.Context, arg GetPostsForF
 }
 
 const getPostsForFeedAsc = `-- name: GetPostsForFeedAsc :many
-SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id,
+SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id, feeds.name AS feed_name,
 CASE 
     WHEN post_views.id IS NOT NULL THEN TRUE
     ELSE FALSE
 END AS viewed
 FROM posts 
+JOIN feeds ON posts.feed_id = feeds.id
 LEFT JOIN post_views ON posts.id = post_views.post_id AND ($3::uuid IS NULL OR $3::uuid = post_views.user_id)
-WHERE feed_id = $1
+WHERE feed_id = $1 AND ($4::bool = FALSE OR post_views.id IS NULL)
 ORDER BY published_at Asc 
 LIMIT $2
 `
 
 type GetPostsForFeedAscParams struct {
-	FeedID uuid.UUID
-	Limit  int32
-	Userid uuid.UUID
+	FeedID   uuid.UUID
+	Limit    int32
+	Userid   uuid.UUID
+	Unviewed bool
 }
 
 type GetPostsForFeedAscRow struct {
@@ -225,11 +241,17 @@ type GetPostsForFeedAscRow struct {
 	Audio       string
 	Duration    sql.NullString
 	FeedID      uuid.UUID
+	FeedName    string
 	Viewed      bool
 }
 
 func (q *Queries) GetPostsForFeedAsc(ctx context.Context, arg GetPostsForFeedAscParams) ([]GetPostsForFeedAscRow, error) {
-	rows, err := q.db.QueryContext(ctx, getPostsForFeedAsc, arg.FeedID, arg.Limit, arg.Userid)
+	rows, err := q.db.QueryContext(ctx, getPostsForFeedAsc,
+		arg.FeedID,
+		arg.Limit,
+		arg.Userid,
+		arg.Unviewed,
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -247,6 +269,7 @@ func (q *Queries) GetPostsForFeedAsc(ctx context.Context, arg GetPostsForFeedAsc
 			&i.Audio,
 			&i.Duration,
 			&i.FeedID,
+			&i.FeedName,
 			&i.Viewed,
 		); err != nil {
 			return nil, err
@@ -263,13 +286,15 @@ func (q *Queries) GetPostsForFeedAsc(ctx context.Context, arg GetPostsForFeedAsc
 }
 
 const getPostsForFeedBeforeDate = `-- name: GetPostsForFeedBeforeDate :many
-SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id, CASE 
+SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id, feeds.name AS feed_name,
+CASE 
     WHEN post_views.id IS NOT NULL THEN TRUE
     ELSE FALSE
 END AS viewed
 FROM posts
+JOIN feeds ON posts.feed_id = feeds.id
 LEFT JOIN post_views ON posts.id = post_views.post_id AND ($4::uuid IS NULL OR $4::uuid = post_views.user_id)
-WHERE feed_id = $1 AND published_at < $2
+WHERE feed_id = $1 AND published_at < $2 AND ($5::bool = FALSE OR post_views.id IS NULL)
 ORDER BY published_at DESC 
 LIMIT $3
 `
@@ -279,6 +304,7 @@ type GetPostsForFeedBeforeDateParams struct {
 	PublishedAt time.Time
 	Limit       int32
 	Userid      uuid.UUID
+	Unviewed    bool
 }
 
 type GetPostsForFeedBeforeDateRow struct {
@@ -291,6 +317,7 @@ type GetPostsForFeedBeforeDateRow struct {
 	Audio       string
 	Duration    sql.NullString
 	FeedID      uuid.UUID
+	FeedName    string
 	Viewed      bool
 }
 
@@ -300,6 +327,7 @@ func (q *Queries) GetPostsForFeedBeforeDate(ctx context.Context, arg GetPostsFor
 		arg.PublishedAt,
 		arg.Limit,
 		arg.Userid,
+		arg.Unviewed,
 	)
 	if err != nil {
 		return nil, err
@@ -318,6 +346,7 @@ func (q *Queries) GetPostsForFeedBeforeDate(ctx context.Context, arg GetPostsFor
 			&i.Audio,
 			&i.Duration,
 			&i.FeedID,
+			&i.FeedName,
 			&i.Viewed,
 		); err != nil {
 			return nil, err
@@ -334,13 +363,14 @@ func (q *Queries) GetPostsForFeedBeforeDate(ctx context.Context, arg GetPostsFor
 }
 
 const getPostsForUser = `-- name: GetPostsForUser :many
-SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id, 
+SELECT posts.id, posts.created_at, posts.updated_at, posts.title, posts.description, posts.published_at, posts.audio, posts.duration, posts.feed_id, feeds.name AS feed_name,
 CASE 
     WHEN post_views.id IS NOT NULL THEN TRUE
     ELSE FALSE
 END AS viewed
 FROM posts 
 JOIN feed_follows ON posts.feed_id = feed_follows.feed_id
+JOIN feeds ON posts.feed_id = feeds.id
 LEFT JOIN post_views ON posts.id = post_views.post_id
 WHERE feed_follows.user_id = $1 AND post_views.id IS NULL
 ORDER BY posts.published_at DESC 
@@ -362,6 +392,7 @@ type GetPostsForUserRow struct {
 	Audio       string
 	Duration    sql.NullString
 	FeedID      uuid.UUID
+	FeedName    string
 	Viewed      bool
 }
 
@@ -384,6 +415,7 @@ func (q *Queries) GetPostsForUser(ctx context.Context, arg GetPostsForUserParams
 			&i.Audio,
 			&i.Duration,
 			&i.FeedID,
+			&i.FeedName,
 			&i.Viewed,
 		); err != nil {
 			return nil, err
