@@ -297,3 +297,51 @@ func (q *Queries) MarkFeedAsFetched(ctx context.Context, id uuid.UUID) (Feed, er
 	)
 	return i, err
 }
+
+const searchForFeed = `-- name: SearchForFeed :many
+SELECT feeds.id AS id, feeds.name, feeds.description, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+FROM feeds
+LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
+LEFT JOIN category ON feed_categories.category_id = category.id
+WHERE to_tsvector(name || '' || description) @@ websearch_to_tsquery($1)
+GROUP BY feeds.id
+`
+
+type SearchForFeedRow struct {
+	ID          uuid.UUID
+	Name        string
+	Description sql.NullString
+	Image       sql.NullString
+	Url         string
+	Categories  json.RawMessage
+}
+
+func (q *Queries) SearchForFeed(ctx context.Context, websearchToTsquery string) ([]SearchForFeedRow, error) {
+	rows, err := q.db.QueryContext(ctx, searchForFeed, websearchToTsquery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []SearchForFeedRow
+	for rows.Next() {
+		var i SearchForFeedRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Image,
+			&i.Url,
+			&i.Categories,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}

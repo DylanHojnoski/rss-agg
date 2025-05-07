@@ -146,6 +146,18 @@ func (apiCfg *apiConfig) handlerGetFollowedFeeds(w http.ResponseWriter, r *http.
     respondWithJSON(w, 201, databaseFollwedFeedsRowToFeeds(feeds))
 }
 
+func (apiCfg *apiConfig) handlerGetFeedsSearch(w http.ResponseWriter, r *http.Request) {
+    name := chi.URLParam(r, "name")
+
+    feeds, err := apiCfg.DB.SearchForFeed(r.Context(), name)
+    if err != nil {
+        respondWithError(w,400, fmt.Sprintf("Couldn't get feeds: %v", err))
+        return
+    }
+
+    respondWithJSON(w, 201, databaseSearchFeedsToFeeds(feeds))
+}
+
 func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Request) {
     feedID, err := uuid.Parse(chi.URLParam(r, "feedID"))
     if err != nil {

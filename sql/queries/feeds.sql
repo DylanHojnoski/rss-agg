@@ -47,3 +47,11 @@ LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
 LEFT JOIN category ON feed_categories.category_id = category.id
 WHERE feed_follows.user_id = $1
 GROUP BY feeds.id;
+
+-- name: SearchForFeed :many
+SELECT feeds.id AS id, feeds.name, feeds.description, feeds.image, feeds.url, JSON_AGG((category.id, category.title)) AS categories 
+FROM feeds
+LEFT JOIN feed_categories ON feeds.id = feed_categories.feed_id
+LEFT JOIN category ON feed_categories.category_id = category.id
+WHERE to_tsvector(name || '' || description) @@ websearch_to_tsquery($1)
+GROUP BY feeds.id;

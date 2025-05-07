@@ -77,6 +77,7 @@ func main() {
     v1Router.Get("/feeds/{feedID}", apiCfg.handlerGetFeedForID)
     v1Router.Get("/feeds/category/{categoryID}", apiCfg.handlerGetFeedsForCategory)
     v1Router.Get("/feeds/category", apiCfg.handlerGetFeedCategories)
+    v1Router.Get("/feeds/search/{name}", apiCfg.handlerGetFeedsSearch)
 
     // OPML
     v1Router.Get("/feeds/opml", apiCfg.handlerGetOPML)
