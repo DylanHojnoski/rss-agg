@@ -90,6 +90,8 @@ func (apiCfg *apiConfig) handlerLogin (w http.ResponseWriter, r *http.Request) {
         Expires: time.Now().Add(time.Hour * 24),
         HttpOnly: true,
         Path: "/",
+        Secure: true,
+        SameSite: http.SameSiteNoneMode,
     }
 
     http.SetCookie(w, &cookie)
@@ -104,6 +106,8 @@ func (apiCfg *apiConfig) handlerLogout (w http.ResponseWriter, r *http.Request, 
         MaxAge: -1,
         HttpOnly: true,
         Path: "/",
+        Secure: true,
+        SameSite: http.SameSiteNoneMode,
     }
 
     http.SetCookie(w, &cookie)
