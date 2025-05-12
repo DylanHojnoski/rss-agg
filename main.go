@@ -80,8 +80,8 @@ func main() {
     v1Router.Get("/feeds/search/{name}", apiCfg.handlerGetFeedsSearch)
 
     // OPML
-    v1Router.Get("/feeds/opml", apiCfg.handlerGetOPML)
-    v1Router.Post("/feeds/opml", apiCfg.handlerImportOPML)
+    v1Router.Get("/feeds/opml",apiCfg.middlewareAuth(apiCfg.handlerGetOPMLUser))
+    v1Router.Post("/feeds/opml", apiCfg.middlewareAuth(apiCfg.handlerImportOPMLUser))
 
     // feed follows
     v1Router.Post("/feeds/follows", apiCfg.middlewareAuth(apiCfg.handlerCreateFeedFollow))

@@ -45,6 +45,41 @@ func (q *Queries) CreateFeedFollow(ctx context.Context, arg CreateFeedFollowPara
 	return i, err
 }
 
+const createFeedFollowWithURL = `-- name: CreateFeedFollowWithURL :one
+INSERT INTO feed_follows (id, created_at, updated_at, user_id, feed_id)
+VALUES ($1, $2, $3, $4, 
+    (SELECT id FROM feeds WHERE feeds.url = $5)
+)
+RETURNING id, created_at, updated_at, user_id, feed_id
+`
+
+type CreateFeedFollowWithURLParams struct {
+	ID        uuid.UUID
+	CreatedAt time.Time
+	UpdatedAt time.Time
+	UserID    uuid.UUID
+	Url       string
+}
+
+func (q *Queries) CreateFeedFollowWithURL(ctx context.Context, arg CreateFeedFollowWithURLParams) (FeedFollow, error) {
+	row := q.db.QueryRowContext(ctx, createFeedFollowWithURL,
+		arg.ID,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+		arg.UserID,
+		arg.Url,
+	)
+	var i FeedFollow
+	err := row.Scan(
+		&i.ID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.UserID,
+		&i.FeedID,
+	)
+	return i, err
+}
+
 const deleteFeedFollow = `-- name: DeleteFeedFollow :exec
 DELETE FROM feed_follows 
 WHERE feed_id = $1 AND user_id = $2
