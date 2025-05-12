@@ -28,7 +28,8 @@ JOIN feeds ON posts.feed_id = feeds.id
 LEFT JOIN post_views ON posts.id = post_views.post_id AND (sqlc.arg(UserID)::uuid IS NULL OR sqlc.arg(UserID)::uuid = post_views.user_id)
 WHERE feed_id = $1 AND (sqlc.arg(Unviewed)::bool = FALSE OR post_views.id IS NULL)
 ORDER BY published_at DESC 
-LIMIT $2;
+LIMIT $2
+OFFSET $3;
 
 -- name: GetPostsForFeedBeforeDate :many 
 SELECT posts.*, feeds.name AS feed_name,
@@ -54,7 +55,8 @@ JOIN feeds ON posts.feed_id = feeds.id
 LEFT JOIN post_views ON posts.id = post_views.post_id AND (sqlc.arg(UserID)::uuid IS NULL OR sqlc.arg(UserID)::uuid = post_views.user_id)
 WHERE feed_id = $1 AND (sqlc.arg(Unviewed)::bool = FALSE OR post_views.id IS NULL)
 ORDER BY published_at Asc 
-LIMIT $2;
+LIMIT $2
+OFFSET $3;
 
 -- name: GetPostsForFeedAfterDate :many 
 SELECT posts.*, feeds.name AS feed_name,

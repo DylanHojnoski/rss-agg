@@ -141,11 +141,13 @@ LEFT JOIN category ON feed_categories.category_id = category.id
 WHERE category.id = $1
 GROUP BY feeds.id
 LIMIT $2
+OFFSET $3
 `
 
 type GetFeedsForCategoryParams struct {
-	ID    uuid.UUID
-	Limit int32
+	ID     uuid.UUID
+	Limit  int32
+	Offset int32
 }
 
 type GetFeedsForCategoryRow struct {
@@ -158,7 +160,7 @@ type GetFeedsForCategoryRow struct {
 }
 
 func (q *Queries) GetFeedsForCategory(ctx context.Context, arg GetFeedsForCategoryParams) ([]GetFeedsForCategoryRow, error) {
-	rows, err := q.db.QueryContext(ctx, getFeedsForCategory, arg.ID, arg.Limit)
+	rows, err := q.db.QueryContext(ctx, getFeedsForCategory, arg.ID, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}

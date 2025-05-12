@@ -113,9 +113,15 @@ func (apiCfg *apiConfig) handlerGetFeedsForCategory(w http.ResponseWriter, r *ht
         limit = 10
     }
 
+    offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+    if err != nil {
+        offset = 0
+    }
+
     feeds, err := apiCfg.DB.GetFeedsForCategory(r.Context(), database.GetFeedsForCategoryParams{
         ID: categoryID,
         Limit: int32(limit),
+        Offset: int32(offset),
     })
 
     if err != nil {
@@ -172,6 +178,11 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
         limit = 10
     }
 
+    offset, err := strconv.Atoi(r.URL.Query().Get("offset"))
+    if err != nil {
+        offset = 0
+    }
+
     unviewed, err := strconv.ParseBool(r.URL.Query().Get("unviewed"))
     if err != nil {
         unviewed = false;
@@ -183,6 +194,7 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
             posts, err = apiCfg.DB.GetPostsForFeedAsc(r.Context(), database.GetPostsForFeedAscParams{
                 FeedID: feedID,
                 Limit: int32(limit),
+                Offset: int32(offset),
                 Userid: uuid.Nil,
                 Unviewed: unviewed,
             })
@@ -191,6 +203,7 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
             posts, err = apiCfg.DB.GetPostsForFeedAsc(r.Context(), database.GetPostsForFeedAscParams{
                 FeedID: feedID,
                 Limit: int32(limit),
+                Offset: int32(offset),
                 Userid: userID,
                 Unviewed: unviewed,
             })
@@ -208,6 +221,7 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
             posts, err = apiCfg.DB.GetPostsForFeed(r.Context(), database.GetPostsForFeedParams{
                 FeedID: feedID,
                 Limit: int32(limit),
+                Offset: int32(offset),
                 Userid: uuid.Nil,
                 Unviewed: unviewed,
             })
@@ -216,6 +230,7 @@ func (apiCfg *apiConfig) handlerGetFeedPosts(w http.ResponseWriter, r *http.Requ
             posts, err = apiCfg.DB.GetPostsForFeed(r.Context(), database.GetPostsForFeedParams{
                 FeedID: feedID,
                 Limit: int32(limit),
+                Offset: int32(offset),
                 Userid: userID,
                 Unviewed: unviewed,
             })

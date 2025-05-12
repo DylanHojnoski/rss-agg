@@ -66,15 +66,17 @@ CASE
 END AS viewed
 FROM posts
 JOIN feeds ON posts.feed_id = feeds.id
-LEFT JOIN post_views ON posts.id = post_views.post_id AND ($3::uuid IS NULL OR $3::uuid = post_views.user_id)
-WHERE feed_id = $1 AND ($4::bool = FALSE OR post_views.id IS NULL)
+LEFT JOIN post_views ON posts.id = post_views.post_id AND ($4::uuid IS NULL OR $4::uuid = post_views.user_id)
+WHERE feed_id = $1 AND ($5::bool = FALSE OR post_views.id IS NULL)
 ORDER BY published_at DESC 
 LIMIT $2
+OFFSET $3
 `
 
 type GetPostsForFeedParams struct {
 	FeedID   uuid.UUID
 	Limit    int32
+	Offset   int32
 	Userid   uuid.UUID
 	Unviewed bool
 }
@@ -97,6 +99,7 @@ func (q *Queries) GetPostsForFeed(ctx context.Context, arg GetPostsForFeedParams
 	rows, err := q.db.QueryContext(ctx, getPostsForFeed,
 		arg.FeedID,
 		arg.Limit,
+		arg.Offset,
 		arg.Userid,
 		arg.Unviewed,
 	)
@@ -218,15 +221,17 @@ CASE
 END AS viewed
 FROM posts 
 JOIN feeds ON posts.feed_id = feeds.id
-LEFT JOIN post_views ON posts.id = post_views.post_id AND ($3::uuid IS NULL OR $3::uuid = post_views.user_id)
-WHERE feed_id = $1 AND ($4::bool = FALSE OR post_views.id IS NULL)
+LEFT JOIN post_views ON posts.id = post_views.post_id AND ($4::uuid IS NULL OR $4::uuid = post_views.user_id)
+WHERE feed_id = $1 AND ($5::bool = FALSE OR post_views.id IS NULL)
 ORDER BY published_at Asc 
 LIMIT $2
+OFFSET $3
 `
 
 type GetPostsForFeedAscParams struct {
 	FeedID   uuid.UUID
 	Limit    int32
+	Offset   int32
 	Userid   uuid.UUID
 	Unviewed bool
 }
@@ -249,6 +254,7 @@ func (q *Queries) GetPostsForFeedAsc(ctx context.Context, arg GetPostsForFeedAsc
 	rows, err := q.db.QueryContext(ctx, getPostsForFeedAsc,
 		arg.FeedID,
 		arg.Limit,
+		arg.Offset,
 		arg.Userid,
 		arg.Unviewed,
 	)
