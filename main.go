@@ -12,6 +12,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/pressly/goose"
 )
 
 type apiConfig struct {
@@ -36,6 +37,11 @@ func main() {
     if err != nil {
         log.Fatal("Cannot connect to database:", err)
     }
+
+	if err := goose.Up(conn, "sql/schema"); err != nil {
+		log.Fatal(err)
+	}
+
     
     db := database.New(conn)
     apiCfg := apiConfig{
@@ -96,9 +102,7 @@ func main() {
     // posts views
     v1Router.Post("/posts/views",apiCfg.middlewareAuth(apiCfg.handlerCreatePostView))
 
-
     router.Mount("/v1", v1Router)
-
 
     log.Printf("Server starting on port %v", portString)
     err = srv.ListenAndServe()
