@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"rssagg/internal/database"
+	"strconv"
 	"strings"
 	"time"
 
@@ -49,7 +50,21 @@ func main() {
         DB: db,
     }
 
-    go startScraping(db, 10, time.Minute)
+	scrapeConcurrencyString := os.Getenv("SCRAPE_CONCURRENCY") 
+	scrapeConcurrency, err := strconv.Atoi(scrapeConcurrencyString)
+	if err != nil || scrapeConcurrency <= 0 {
+		scrapeConcurrency = 10
+	}
+	log.Printf("Scrape Concurrency: %d\n", scrapeConcurrency)
+
+	scrapeFrequencyString := os.Getenv("SCRAPE_FREQUENCY") 
+	scrapeFrequency, err := strconv.Atoi(scrapeFrequencyString)
+	if err != nil || scrapeFrequency <= 0 {
+		scrapeFrequency = 1
+	}
+	log.Printf("Scrape Frequency: %d minutes\n", scrapeFrequency)
+
+    go startScraping(db, scrapeConcurrency, time.Duration(scrapeFrequency)*time.Minute)
 
 	originsEnv := os.Getenv("ALLOWED_ORIGINS") 
 
