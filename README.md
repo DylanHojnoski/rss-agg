@@ -5,6 +5,10 @@
 ```
 PORT=
 DB_URL=postgres://postgres:username@domain:port/rssagg?sslmode=disable
+KEY=
+ALLOWED_ORIGINS=http://*,https://*
+SCRAPE_FREQUENCY=1
+SCRAPE_CONCURRENCY=10
 ```
 
 ## Database Migrations
