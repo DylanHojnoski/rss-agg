@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"rssagg/internal/database"
+	"strings"
 	"time"
 
 	"github.com/go-chi/chi"
@@ -50,10 +51,18 @@ func main() {
 
     go startScraping(db, 10, time.Minute)
 
+	originsEnv := os.Getenv("ALLOWED_ORIGINS") 
+
+    allowedOrigins := strings.Split(originsEnv, ",")
+    for i := range allowedOrigins {
+        allowedOrigins[i] = strings.TrimSpace(allowedOrigins[i]) // cleanup
+		log.Printf("ORIGIN: %s\n", allowedOrigins[i])
+    }
+
     router := chi.NewRouter()
 
     router.Use(cors.Handler(cors.Options{
-        AllowedOrigins: []string{"https://*", "http://*"},
+        AllowedOrigins: allowedOrigins,
         AllowedMethods: []string{"GET","POST", "PUT", "DELETE", "OPTIONS"},
         AllowedHeaders: []string{"Accept", "Authorization", "Content-Type"},
         ExposedHeaders: []string{"Link"},
